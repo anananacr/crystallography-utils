@@ -78,7 +78,7 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
     return corrected_data.astype(np.int32)
 
 
-def main(raw_args=None):
+def main():
     parser = argparse.ArgumentParser(
         description="Convert JUNGFRAU 1M H5 images collected at REGAE for rotational data step/fly scan and return images in rotation sequence according tro the file index."
     )
@@ -116,7 +116,7 @@ def main(raw_args=None):
     parser.add_argument(
         "-o", "--output", type=str, action="store", help="hdf5 output path"
     )
-    args = parser.parse_args(raw_args)
+    args = parser.parse_args()
 
     global dark, gain
 
@@ -125,43 +125,62 @@ def main(raw_args=None):
     path = pathlib.Path(output_folder)
     path.mkdir(parents=True, exist_ok=True)
 
-    num_panels: int = 2
-    dark_filenames = [args.pedestal1, args.pedestal2]
-    gain_filenames = [args.gain1, args.gain2]
-    dark = np.ndarray((3, 512 * num_panels, 1024), dtype=np.float32)
-    gain = np.ndarray((3, 512 * num_panels, 1024), dtype=np.float64)
+    args = parser.parse_args()
+    gain_d0_filenames=[]
+    gain_d1_filenames=[]
+
+    for n in range(16):
+        gain_d0_pattern = args.gain1+"{:02d}".format(n)+"*"
+        gain_d0_filenames.append(glob.glob(f"{gain_d0_pattern}")[0])
+        gain_d1_pattern = args.gain2+"{:02d}".format(n)+"*"
+        gain_d1_filenames.append(glob.glob(f"{gain_d1_pattern}")[0])
+
+    num_panels = 2
+    gain = np.ndarray((16, 3, 512 * num_panels, 1024), dtype=np.float64)
     panel_id: int
+    for n in range(len(gain_d0_filenames)):
+        gain_filenames=[gain_d0_filenames[n], gain_d1_filenames[n]]
+        print(gain_filenames)
+        for panel_id in range(num_panels):
+            gain_file: BinaryIO = open(gain_filenames[panel_id], "rb")
+            gain_mode: int
+            for gain_mode in range(3):
+                gain[n, gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = np.fromfile(
+                    gain_file, dtype=np.float64, count=1024 * 512
+                ).reshape(512, 1024)
+            gain_file.close()
+
+    dark_filenames = [args.pedestal1, args.pedestal2]
+    dark = np.ndarray((3, 512 * num_panels, 1024), dtype=np.float32)
+
     for panel_id in range(num_panels):
-        gain_file: BinaryIO = open(gain_filenames[panel_id], "rb")
         dark_file: Any = h5py.File(dark_filenames[panel_id], "r")
         gain_mode: int
         for gain_mode in range(3):
             dark[gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = dark_file[
                 "gain%d" % gain_mode
             ][:]
-            gain[gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = np.fromfile(
-                gain_file, dtype=np.float64, count=1024 * 512
-            ).reshape(512, 1024)
-        gain_file.close()
         dark_file.close()
-
 
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
-    converted_data = np.zeros(data_shape, dtype=np.int32)
-    #converted_data = np.zeros((3,*data_shape[1:]), dtype=np.int32)
+    #converted_data = np.zeros(data_shape, dtype=np.int32)
+    converted_data = np.zeros((3,*data_shape[1:]), dtype=np.int32)
 
 
-    for i in range(data_shape[0]):
-    #for i in range(3):
-        converted_data[i] = apply_calibration(np.array(f["entry/data/data"][i]), dark, gain)
-        
+    #for i in range(data_shape[0]):
+    for i in range(3):
+        if int(f["/entry/data/debug"][i,0])/256 == int(f["/entry/data/debug"][i,1])/256:
+            storage_cell=int(int(f["/entry/data/debug"][i,0])/256)
+            converted_data[i] = apply_calibration(np.array(f["entry/data/data"][i]), dark, gain[storage_cell])
+    
     with h5py.File(args.output, "w") as f:
         entry = f.create_group("entry")
         entry.attrs["NX_class"] = "NXentry"
         grp_data = entry.create_group("data")
         grp_data.attrs["NX_class"] = "NXdata"
         grp_data.create_dataset("data", data=converted_data, compression="gzip", compression_opts=6)
+    
 
 if __name__ == "__main__":
     main()

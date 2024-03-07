@@ -13,6 +13,7 @@
 import sys
 import numpy as np
 import h5py
+import math
 from os.path import basename, splitext
 
 if sys.argv[1] == '-':
@@ -33,7 +34,8 @@ for line in stream:
             reading_peaks = True
         elif reading_peaks:
             fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
-            powder[int(ss), int(fs)] += 100*intensity
+            if intensity>0:
+            	powder[int(ss), int(fs)] += math.log10(intensity)
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
         powder = np.zeros((max_ss + 1, max_fs + 1))
