@@ -20,7 +20,7 @@ dark = None
 gain = None
 fly_frames_to_merge = 1
 mode = 0 #"fly"
-photon_energy_in_kev=14.96
+photon_energy_in_kev=1
 
 def filter_data(data):
     """
@@ -140,40 +140,41 @@ def main():
     panel_id: int
     for n in range(len(gain_d0_filenames)):
         gain_filenames=[gain_d0_filenames[n], gain_d1_filenames[n]]
-        print(gain_filenames)
+        #print(gain_filenames)
         for panel_id in range(num_panels):
             gain_file: BinaryIO = open(gain_filenames[panel_id], "rb")
             gain_mode: int
             for gain_mode in range(3):
-                gain[n, gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = np.fromfile(
+                gain[(15-n), gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = np.fromfile(
                     gain_file, dtype=np.float64, count=1024 * 512
                 ).reshape(512, 1024)
             gain_file.close()
 
     dark_filenames = [args.pedestal1, args.pedestal2]
-    dark = np.ndarray((3, 512 * num_panels, 1024), dtype=np.float32)
+    darks = np.ndarray((16, 3, 512 * num_panels, 1024), dtype=np.float32)
 
     for panel_id in range(num_panels):
         dark_file: Any = h5py.File(dark_filenames[panel_id], "r")
         gain_mode: int
         for gain_mode in range(3):
-            dark[gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = dark_file[
-                "gain%d" % gain_mode
-            ][:]
+            for storage_cell_number in range(16):
+                darks[(15-storage_cell_number), gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = dark_file[
+                "gain%d" % gain_mode][storage_cell_number,:,:]
         dark_file.close()
 
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
-    #converted_data = np.zeros(data_shape, dtype=np.int32)
-    converted_data = np.zeros((3,*data_shape[1:]), dtype=np.int32)
+    converted_data = np.zeros(data_shape, dtype=np.int32)
+    #converted_data = np.zeros((30,*data_shape[1:]), dtype=np.int32)
 
-
-    #for i in range(data_shape[0]):
-    for i in range(3):
+    idx=0
+    for i in range(data_shape[0]):
+    #for i in range(250,280):
         if int(f["/entry/data/debug"][i,0])/256 == int(f["/entry/data/debug"][i,1])/256:
-            storage_cell=int(int(f["/entry/data/debug"][i,0])/256)
-            converted_data[i] = apply_calibration(np.array(f["entry/data/data"][i]), dark, gain[storage_cell])
-    
+            storage_cell=15-int(int(f["/entry/data/debug"][i,0])/256)
+            converted_data[idx] = apply_calibration(np.array(f["entry/data/data"][i]), darks[storage_cell], gain[storage_cell])
+            idx+=1
+
     with h5py.File(args.output, "w") as f:
         entry = f.create_group("entry")
         entry.attrs["NX_class"] = "NXentry"

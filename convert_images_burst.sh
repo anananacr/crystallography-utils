@@ -25,7 +25,9 @@ source /home/rodria/scripts/regae/env-regae/bin/activate
 INP=$1
 DARKS_D0=$2
 DARKS_D1=$3
+GAIN_D0=gainMaps_M524_sc
+GAIN_D1=gainMaps_M525_sc
 ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/converted
 echo $INP
 
-python3 convert_images_burst.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/gainMaps_M524 -g2 ${ROOT}/../darks/gainMaps_M525 -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};
+python3 convert_images_burst.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/${GAIN_D0} -g2 ${ROOT}/../darks/${GAIN_D1} -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};
