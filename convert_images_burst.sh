@@ -25,8 +25,8 @@ source /home/rodria/scripts/regae/env-regae/bin/activate
 INP=$1
 DARKS_D0=$2
 DARKS_D1=$3
-GAIN_D0=gainMaps_M524_sc
-GAIN_D1=gainMaps_M525_sc
+GAIN_D0=gainMaps_M525_sc
+GAIN_D1=gainMaps_M524_sc
 ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/converted
 echo $INP
 

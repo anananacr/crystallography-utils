@@ -140,12 +140,11 @@ def main():
     panel_id: int
     for n in range(len(gain_d0_filenames)):
         gain_filenames=[gain_d0_filenames[n], gain_d1_filenames[n]]
-        #print(gain_filenames)
         for panel_id in range(num_panels):
             gain_file: BinaryIO = open(gain_filenames[panel_id], "rb")
             gain_mode: int
             for gain_mode in range(3):
-                gain[(15-n), gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = np.fromfile(
+                gain[15-n, gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = np.fromfile(
                     gain_file, dtype=np.float64, count=1024 * 512
                 ).reshape(512, 1024)
             gain_file.close()
@@ -158,9 +157,10 @@ def main():
         gain_mode: int
         for gain_mode in range(3):
             for storage_cell_number in range(16):
-                darks[(15-storage_cell_number), gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = dark_file[
+                darks[15-storage_cell_number, gain_mode, 512 * panel_id : 512 * (panel_id + 1), :] = dark_file[
                 "gain%d" % gain_mode][storage_cell_number,:,:]
         dark_file.close()
+
 
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
@@ -169,9 +169,9 @@ def main():
 
     idx=0
     for i in range(data_shape[0]):
-    #for i in range(250,280):
+    #for i in range(2000,2030):
         if int(f["/entry/data/debug"][i,0])/256 == int(f["/entry/data/debug"][i,1])/256:
-            storage_cell=15-int(int(f["/entry/data/debug"][i,0])/256)
+            storage_cell=int(f["/entry/data/debug"][i,0]//256)%16
             converted_data[idx] = apply_calibration(np.array(f["entry/data/data"][i]), darks[storage_cell], gain[storage_cell])
             idx+=1
 

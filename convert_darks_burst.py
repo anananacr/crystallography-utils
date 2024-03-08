@@ -108,12 +108,14 @@ def main():
         darks = dark_file["data_f000000000000"]
         debug = dark_file["debug"]
         darks_shape = darks.shape
-        n_frames_per_storage_cell = int(darks_shape[0]/16)
+
         storage_cell_number: int
         for frame in range(darks_shape[0]):
             storage_cell_number = int(debug[frame]//256)%16
-            d[storage_cell_number]+=1
-            dark[storage_cell_number, gain_mode, : , :] += darks[frame]
+            if d[storage_cell_number]<100:
+                dark[storage_cell_number, gain_mode, : , :] += darks[frame]
+                d[storage_cell_number]+=1
+
         dark_file.close()
         for storage_cell_number, counter in d.items():
             dark[storage_cell_number,gain_mode,:,:]/=counter
