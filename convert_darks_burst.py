@@ -22,61 +22,6 @@ fly_frames_to_merge = 1
 mode = 0 #"fly"
 photon_energy_in_kev=14.96
 
-def filter_data(data):
-    """
-    Filter JUNGFRAU 1M faulty images based on number of pixels at gain 2.
-
-    Parameters
-    ----------
-    data: np.ndarray
-        JUNGFRAU 1M single raw image
-
-    Returns
-    ----------
-    bool
-        True if file should be skipped before apply calibration
-    """
-    gain_3 = np.where(data & 2**15 > 0)
-    counts_3 = gain_3[0].shape[0]
-    if counts_3 > 1e6:
-        return 1
-    else:
-        return 0
-
-
-def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
-    """
-    Applies the calibration to a JUNGFRAU 1M detector data frame.
-
-    This function determines the gain stage of each pixel in the provided data
-    frame, and applies the relevant gain and offset corrections.
-
-    Parameters:
-
-        data: The detector data frame to calibrate.
-
-    Returns:
-
-        The corrected data frame.
-    """
-    corrected_data: np.ndarray = data.astype(np.float32)
-
-    where_gain: List[np.ndarray] = [
-        np.where((data & 2**14 == 0) & (data & 2**15 == 0)),
-        np.where((data & (2**14) > 0) & (data & 2**15 == 0)),
-        np.where(data & 2**15 > 0),
-    ]
-
-    gain_mode: int
-
-    for gain_mode in range(3):
-        corrected_data[where_gain[gain_mode]] -= dark[gain_mode][where_gain[gain_mode]]
-
-        corrected_data[where_gain[gain_mode]] /= (gain[gain_mode][where_gain[gain_mode]] * photon_energy_in_kev)
-        corrected_data[np.where(dark[0] == 0)] = 0
-
-    return corrected_data.astype(np.int32)
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -101,7 +46,9 @@ def main():
     dark = np.zeros((16, 3, 512, 1024), dtype=np.float32)
     panel_id: int
 
-    for gain_mode in range(len(dark_filenames)):
+    #for gain_mode in range(len(dark_filenames)):
+    for gain_mode in range(1):
+
         d = {i:0 for i in range(16)}
         dark_filename=dark_filenames[gain_mode]
         dark_file: Any = h5py.File(dark_filename, "r")
@@ -110,15 +57,36 @@ def main():
         darks_shape = darks.shape
 
         storage_cell_number: int
-        for frame in range(darks_shape[0]):
-            storage_cell_number = int(debug[frame]//256)%16
-            if d[storage_cell_number]<100:
+
+        if gain_mode==0:
+            #for frame in range(darks_shape[0]):
+            for frame in range(10001):
+                storage_cell_number = int(debug[frame]//256)%16
                 dark[storage_cell_number, gain_mode, : , :] += darks[frame]
-                d[storage_cell_number]+=1
+                d[storage_cell_number]+=1            
+        else:
+            skip_dict_counter = {i:0 for i in range(16)}
+
+            for frame in range(darks_shape[0]):
+                storage_cell_number = int(debug[frame]//256)%16
+                if storage_cell_number!=0:
+                    # take second 100
+                    if d[storage_cell_number]<100 and skip_dict_counter[storage_cell_number]<100:
+                        skip_dict_counter[storage_cell_number]+=1
+                    else:
+                        dark[storage_cell_number, gain_mode, : , :] += darks[frame]
+                        d[storage_cell_number]+=1
+                else:
+                    # take first 100
+                    if d[storage_cell_number]<100:
+                        dark[storage_cell_number, gain_mode, : , :] += darks[frame]
+                        d[storage_cell_number]+=1
 
         dark_file.close()
         for storage_cell_number, counter in d.items():
             dark[storage_cell_number,gain_mode,:,:]/=counter
+
+    ## TODO pixels that don't have data in all gains, for all cells??
 
     with h5py.File(args.output, "w") as f:
         f.create_dataset("/gain0", data=dark[:,0,:,:])

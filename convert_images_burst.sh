@@ -13,8 +13,6 @@
 # Convert images using convert_all.py script. Remember to set correctly paths where data and pedestals from JUNGFRAU 1M are stored.
 # Enable H5 data to be converted in step-wise manner, using start and end frame number arguments,  dividing it in smaller jobs.
 
-# ./convert_step.sh 231020_mos_c3_ms_001/ed_rot_step_003/231020_mos_c3_ms_001_003 step 0 12999
-
 # Written by Ana Carolina Rodrigues.
 #
 # Mail: ana.rodrigues@desy.de
@@ -25,9 +23,9 @@ source /home/rodria/scripts/regae/env-regae/bin/activate
 INP=$1
 DARKS_D0=$2
 DARKS_D1=$3
-GAIN_D0=gainMaps_M525_sc
-GAIN_D1=gainMaps_M524_sc
+GAIN_D0=gainMaps_M524_sc
+GAIN_D1=gainMaps_M525_sc
 ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/converted
 echo $INP
 
-python3 convert_images_burst.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/${GAIN_D0} -g2 ${ROOT}/../darks/${GAIN_D1} -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};
+python3 convert_images_burst_fixg1.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/${GAIN_D0} -g2 ${ROOT}/../darks/${GAIN_D1} -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};

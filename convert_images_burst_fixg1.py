@@ -18,11 +18,10 @@ import pathlib
 
 dark = None
 gain = None
-fly_frames_to_merge = 1
-mode = 0 #"fly"
+
 photon_energy_in_kev=1
 
-def filter_data(data):
+def filter_data(data: np.ndarray)->bool:
     """
     Filter JUNGFRAU 1M faulty images based on number of pixels at gain 2.
 
@@ -38,10 +37,10 @@ def filter_data(data):
     """
     gain_3 = np.where(data & 2**15 > 0)
     counts_3 = gain_3[0].shape[0]
-    if counts_3 > 1e6:
-        return 1
+    if counts_3 > 1e3:
+        return True
     else:
-        return 0
+        return False
 
 
 def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
@@ -61,21 +60,16 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
     """
     corrected_data: np.ndarray = data.astype(np.float32)
 
-    where_gain: List[np.ndarray] = [
-        np.where((data & 2**14 == 0) & (data & 2**15 == 0)),
-        np.where((data & (2**14) > 0) & (data & 2**15 == 0)),
-        np.where(data & 2**15 > 0),
-    ]
 
-    gain_mode: int
-
-    for gain_mode in range(1,2):
-        corrected_data[where_gain[gain_mode]] -= dark[gain_mode][where_gain[gain_mode]]
-        corrected_data[where_gain[gain_mode]] /= (gain[gain_mode][where_gain[gain_mode]] * photon_energy_in_kev)
+    
+    corrected_data -= dark[1]
+    corrected_data /= gain[1] * photon_energy_in_kev
         
-    corrected_data[np.where(corrected_data<0)] = 0
+    #corrected_data[np.where(corrected_data<0)] = 0
 
-    return corrected_data.astype(np.int32)
+    return np.abs(corrected_data).astype(np.int32)
+    #return corrected_data.astype(np.int32)
+
 
 
 def main():
@@ -165,13 +159,15 @@ def main():
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
     converted_data = np.zeros(data_shape, dtype=np.int32)
-    converted_data = np.zeros((30,*data_shape[1:]), dtype=np.int32)
+    #converted_data = np.zeros((60,*data_shape[1:]), dtype=np.int32)
 
     idx=0
-    #for i in range(data_shape[0]):
-    for i in range(2000,2030):
+    for i in range(data_shape[0]):
+    #for i in range(2000,2060):
         storage_cell=int(f["/entry/data/debug"][i,0]//256)%16
-        converted_data[idx] = apply_calibration(np.array(f["entry/data/data"][i]), darks[storage_cell], gain[storage_cell])
+        raw_data=np.array(f["entry/data/data"][i])
+        if not filter_data(raw_data):
+            converted_data[idx] = apply_calibration(raw_data, darks[storage_cell], gain[storage_cell])
         idx+=1
 
     with h5py.File(args.output, "w") as f:
