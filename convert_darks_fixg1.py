@@ -16,26 +16,6 @@ import os
 import matplotlib.colors as color
 import pathlib
 
-def filter_data(data):
-    """
-    Filter JUNGFRAU 1M faulty images based on number of pixels at gain 2.
-
-    Parameters
-    ----------
-    data: np.ndarray
-        JUNGFRAU 1M single raw image
-
-    Returns
-    ----------
-    bool
-        True if file should be skipped before apply calibration
-    """
-    gain_3 = np.where(data & 2**15 > 0)
-    counts_3 = gain_3[0].shape[0]
-    if counts_3 > 1e6:
-        return 1
-    else:
-        return 0
 
 def main():
     parser = argparse.ArgumentParser(
