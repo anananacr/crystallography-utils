@@ -38,10 +38,10 @@ def filter_data(data):
     """
     gain_3 = np.where(data & 2**15 > 0)
     counts_3 = gain_3[0].shape[0]
-    if counts_3 > 1e6:
-        return 1
+    if counts_3 > 1e5:
+        return True
     else:
-        return 0
+        return False
 
 
 def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
@@ -71,9 +71,7 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
 
     for gain_mode in range(3):
         corrected_data[where_gain[gain_mode]] -= dark[gain_mode][where_gain[gain_mode]]
-
         corrected_data[where_gain[gain_mode]] /= (gain[gain_mode][where_gain[gain_mode]] * photon_energy_in_kev)
-        corrected_data[np.where(dark[0] == 0)] = 0
 
     return corrected_data.astype(np.int32)
 
@@ -149,12 +147,11 @@ def main(raw_args=None):
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
     converted_data = np.zeros(data_shape, dtype=np.int32)
-    #converted_data = np.zeros((3,*data_shape[1:]), dtype=np.int32)
-
 
     for i in range(data_shape[0]):
-    #for i in range(3):
-        converted_data[i] = apply_calibration(np.array(f["entry/data/data"][i]), dark, gain)
+        raw_data=np.array(f["entry/data/data"][i])
+        if not filter_data(raw_data):
+            converted_data[i] = apply_calibration(raw_data, dark, gain)
         
     with h5py.File(args.output, "w") as f:
         entry = f.create_group("entry")

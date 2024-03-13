@@ -65,7 +65,7 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
     corrected_dark: np.ndarray = (dark_gain_1 & mask).astype(np.float32)
     
     corrected_data -= corrected_dark
-    corrected_data /= gain[1] * photon_energy_in_kev
+    corrected_data /= 2 * gain[1] * photon_energy_in_kev
         
     #corrected_data[np.where(corrected_data<0)] = 0
 
