@@ -38,7 +38,7 @@ def filter_data(data):
     """
     gain_3 = np.where(data & 2**15 > 0)
     counts_3 = gain_3[0].shape[0]
-    if counts_3 > 1e5:
+    if counts_3 > 1e6:
         return True
     else:
         return False
