@@ -28,4 +28,4 @@ GAIN_D1=gainMaps_M525_sc
 ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/converted
 echo $INP
 
-python3 convert_images_burst_fixg1.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/${GAIN_D0} -g2 ${ROOT}/../darks/${GAIN_D1} -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};
+python convert_images_burst_fixg1_filter_blank.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/${GAIN_D0} -g2 ${ROOT}/../darks/${GAIN_D1} -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};

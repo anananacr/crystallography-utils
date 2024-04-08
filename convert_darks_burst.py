@@ -18,9 +18,6 @@ import pathlib
 
 dark = None
 gain = None
-fly_frames_to_merge = 1
-mode = 0 #"fly"
-photon_energy_in_kev=14.96
 
 
 def main():
@@ -46,9 +43,7 @@ def main():
     dark = np.zeros((16, 3, 512, 1024), dtype=np.float32)
     panel_id: int
 
-    #for gain_mode in range(len(dark_filenames)):
-    for gain_mode in range(1):
-
+    for gain_mode in range(len(dark_filenames)):
         d = {i:0 for i in range(16)}
         dark_filename=dark_filenames[gain_mode]
         dark_file: Any = h5py.File(dark_filename, "r")
@@ -59,8 +54,7 @@ def main():
         storage_cell_number: int
 
         if gain_mode==0:
-            #for frame in range(darks_shape[0]):
-            for frame in range(10001):
+            for frame in range(darks_shape[0]):
                 storage_cell_number = int(debug[frame]//256)%16
                 dark[storage_cell_number, gain_mode, : , :] += darks[frame]
                 d[storage_cell_number]+=1            

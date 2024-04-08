@@ -22,11 +22,11 @@ def main():
         description="Convert Jungfrau1M dark frames collected in fixg1 for burst mode calibration."
     )
     parser.add_argument(
-        "-p",
-        "--pedestal",
+        "-i",
+        "--input",
         type=str,
         action="store",
-        help="path to the pedestal file for module 1",
+        help="input frames separated per memory cell",
     )
 
     parser.add_argument(
@@ -34,32 +34,24 @@ def main():
     )
     args = parser.parse_args()
 
-    dark_pattern = args.pedestal+"*"
-
-    dark_filenames=sorted(glob.glob(f"{dark_pattern}"))
+    filename=args.input
     dark = np.zeros((16, 3, 512, 1024), dtype=np.float32)
     panel_id: int
 
-    for gain_mode in range(1,2):
+    gain_mode=1
 
-        d = {i:0 for i in range(16)}
-        dark_filename=dark_filenames[0]
-        dark_file: Any = h5py.File(dark_filename, "r")
-        darks = dark_file["data_f000000000000"]
-        debug = dark_file["debug"]
-        darks_shape = darks.shape
-        print(darks.shape)
-        storage_cell_number: int
-
-        for frame in range(darks.shape[0]):
-            storage_cell_number = int(debug[frame]//256)%16
-            dark[storage_cell_number, gain_mode, : , :] += darks[frame]
-            d[storage_cell_number]+=1            
+    data_file: Any = h5py.File(filename, "r")
+    
+    for i in range(16):
+        if i<6 or i>10:
+            dark[i,gain_mode,:,:] =  np.nanmedian(np.array(data_file[f"{i}"]),axis=0)
+        else:
+            dark[i,gain_mode,:,:] =  dark[5,gain_mode,:,:]
         
-        dark_file.close()
-        for storage_cell_number, counter in d.items():
-            dark[storage_cell_number,gain_mode,:,:]/=counter
+    data_file.close()
 
+    dark=np.nan_to_num(dark)
+    
     with h5py.File(args.output, "w") as f:
         f.create_dataset("/gain0", data=dark[:,0,:,:])
         f.create_dataset("/gain1", data=dark[:,1,:,:])

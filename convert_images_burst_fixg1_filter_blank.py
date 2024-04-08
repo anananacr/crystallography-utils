@@ -58,18 +58,11 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
 
         The corrected data frame.
     """
-    data = np.array(data, dtype=np.uint16)
-    dark_gain_1 = np.array(dark[1], dtype=np.uint16)
-    mask = np.uint16(0b0011111111111111)
-    corrected_data: np.ndarray = (data & mask).astype(np.float32)
-    corrected_dark: np.ndarray = (dark_gain_1 & mask).astype(np.float32)
+    corrected_data: np.ndarray = data.astype(np.float32)
     
-    corrected_data -= corrected_dark
-    corrected_data /= 2 * gain[1] * photon_energy_in_kev
-        
-    #corrected_data[np.where(corrected_data<0)] = 0
-
-    #return np.abs(corrected_data).astype(np.int32)
+    dark_gain_1 = np.array(dark[1], dtype=np.uint16)
+    corrected_data -= dark_gain_1
+    corrected_data /= -1*gain[1]
     return corrected_data.astype(np.int32)
 
 
@@ -161,6 +154,7 @@ def main():
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
     converted_data = np.zeros(data_shape, dtype=np.int32)
+    is_hit_data = np.zeros(data_shape[0], dtype=bool)
     #converted_data = np.zeros((60,*data_shape[1:]), dtype=np.int32)
 
     idx=0
@@ -169,16 +163,35 @@ def main():
         storage_cell=int(f["/entry/data/debug"][i,0]//256)%16
         raw_data=np.array(f["entry/data/data"][i])
         if not filter_data(raw_data):
-            converted_data[idx] = apply_calibration(raw_data, darks[storage_cell], gain[storage_cell])
+            bad_pixels=np.ones(raw_data.shape)
+            bad_pixels[np.where(darks[storage_cell][1]==0)]=0
+            converted_data[idx] = apply_calibration(raw_data*bad_pixels, darks[storage_cell], gain[storage_cell])
+            all_zeros = not np.any(converted_data[idx])
+            if all_zeros:
+                is_hit_data[idx]=False
+            else:
+                is_hit_data[idx]=True
+        else:
+            is_hit_data[idx]=False
         idx+=1
+
+
+    count_true = np.count_nonzero(is_hit_data)
+    filtered_data = np.zeros((count_true, *data_shape[1:]), dtype=np.int32)
+
+    for idx,i in enumerate(converted_data):
+        if is_hit_data[idx]:
+            filtered_data[idx]=i+20
+
 
     with h5py.File(args.output, "w") as f:
         entry = f.create_group("entry")
         entry.attrs["NX_class"] = "NXentry"
         grp_data = entry.create_group("data")
         grp_data.attrs["NX_class"] = "NXdata"
-        grp_data.create_dataset("data", data=converted_data, compression="gzip", compression_opts=6)
-    
+        #grp_data.create_dataset("data", data=converted_data, compression="gzip", compression_opts=6)
+        grp_data.create_dataset("data", data=filtered_data, compression="gzip", compression_opts=6)
+
 
 if __name__ == "__main__":
     main()
