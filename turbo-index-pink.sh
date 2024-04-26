@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=10000  # Size of job chunks
+SPLIT=200  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -22,17 +22,18 @@ STREAMDIR=$4
 # Set up environment here if necessary
 source /etc/profile.d/modules.sh
 module purge
-module load maxwell crystfel/0.10.2
+module load maxwell crystfel/0.11.0
+module load xray
 
 # Generate event list from file above
-list_events -i $INPUT -g $GEOM -o events-${RUN}.lst
-if [ $? != 0 ]; then
-       echo "list_events failed"
-       exit 1
-fi
+#list_events -i $INPUT -g $GEOM -o events-${RUN}.lst
+#if [ $? != 0 ]; then
+#       echo "list_events failed"
+#       exit 1
+#fi
 # If you are using single-event files instead of multi-event ("CXI") ones,
 # comment out the above lines and uncomment the following one:
-#cp $INPUT events-${RUN}.lst
+cp $INPUT events-${RUN}.lst
 
 # Count total number of events
 wc -l events-${RUN}.lst
@@ -76,14 +77,14 @@ for FILE in split-events-${RUN}.lst*; do
     #echo "#SBATCH --mail-user $MAIL" >> $SLURMFILE
     echo >> $SLURMFILE
     echo "module purge" >> $SLURMFILE
-    echo "module load maxwell crystfel/0.10.2" >> $SLURMFILE  # Set up environment here (again) if necessary
+    echo "module load maxwell crystfel/0.11.0" >> $SLURMFILE  # Set up environment here (again) if necessary
+    echo "module load xray" >> $SLURMFILE
     echo >> $SLURMFILE
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=0 --min-snr=5 --min-pix-count=2 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=4,5,6 --copy-header=/entry/shots/detector_shift_x_in_mm --copy-header=/entry/shots/detector_shift_y_in_mm --copy-header=/entry/data/raw_file_id --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.065 --fix-profile-radius=0.002e9 --int-radius=5,7,9 --pinkIndexer-max-refinement-disbalance=0.5 --no-non-hits-in-stream "
-    #command="$command --no-retry --no-refine --no-check-peaks --no-check-cell"
-    command="$command --indexing=mosflm"
+    command="$command --peaks=peakfinder8 --threshold=0 --min-snr=7 --local-bg-radius=5 --min-pix-count=3 --max-pix-count=200 --min-res=0 --max-res=600 --min-peaks=10 --int-radius=4,6,7 --copy-header=/entry/data/raw_file_id "
+    command="$command --no-retry --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --no-check-peaks --no-refine --no-check-cell --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.04 --fix-profile-radius=0.002e9 --pinkIndexer-max-refinement-disbalance=0.4 --no-non-hits-in-stream --camera-length-estimate=0.0818"
     command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/lyso.cell"
     echo $command >> $SLURMFILE
 
