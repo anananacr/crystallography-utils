@@ -12,80 +12,80 @@ import matplotlib.pyplot as plt
 from typing import Any, BinaryIO, List
 import glob
 import subprocess as sub
+import re
 import os
 import matplotlib.colors as color
 import pathlib
 
-dark = None
-gain = None
-
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Convert JUNGFRAU 1M H5 images collected at REGAE for rotational data step/fly scan and return images in rotation sequence according tro the file index."
+        description="Convert Jungfrau1M dark frames collected in fixed gain for burst mode."
     )
     parser.add_argument(
-        "-p1",
-        "--pedestal1",
+        "-i",
+        "--input",
         type=str,
         action="store",
-        help="path to the pedestal file for module 1",
+        help="pedestal list",
     )
 
     parser.add_argument(
         "-o", "--output", type=str, action="store", help="hdf5 output path"
     )
     args = parser.parse_args()
+    const_dark: Tuple[int, int, int] = (0, 0, 0)
 
-    dark_pattern = args.pedestal1+"*"
+    s = 100
+    filelist=open(args.input, "r")
+    n: int = 1024 * 512
+    sd = np.zeros((3, 16, n), dtype=np.float64)
+    nd = np.zeros((3, 16, n))
 
-    dark_filenames=sorted(glob.glob(f"{dark_pattern}"))
-    dark = np.zeros((16, 3, 512, 1024), dtype=np.float32)
     panel_id: int
 
-    for gain_mode in range(len(dark_filenames)):
-        d = {i:0 for i in range(16)}
-        dark_filename=dark_filenames[gain_mode]
-        dark_file: Any = h5py.File(dark_filename, "r")
-        darks = dark_file["data_f000000000000"]
-        debug = dark_file["debug"]
-        darks_shape = darks.shape
+    for fn in filelist:
+        index = s
+        fn=fn[:-1]
+        i: int = int(re.findall("_f(\\d+)_", fn)[0])
+        h5_data_path: str = "/data_" + f"f{i:012d}"
+        f: Any
+        with h5py.File(fn, "r") as f:
+            n_frames: int = f[h5_data_path].shape[0]
+            print("%s frames in %s" % (n_frames, fn))
+            frame: NDArray[np.int_]
+            for frame in f[h5_data_path][s:]:
+                #storage_cell_number = 15 - ((int(f["debug"][index])//256)%16)
+                storage_cell_number =(int(f["debug"][index])//256)%16
 
-        storage_cell_number: int
+                d: NDArray[np.int_] = frame.flatten()
+                where_gain: List[Tuple[NDArray[np.int_]]] = [
+                    np.where((d & 2**14 == 0) & (d > 0)),
+                    np.where((d & (2**14) > 0) & (d & 2**15 == 0)),
+                    np.where(d & 2**15 > 0),
+                ]
+                for i in range(3):
+                    sd[i, storage_cell_number][where_gain[i]] += d[where_gain[i]]
+                    nd[i, storage_cell_number][where_gain[i]] += 1
+                index+=1
 
-        if gain_mode==0:
-            for frame in range(darks_shape[0]):
-                storage_cell_number = int(debug[frame]//256)%16
-                dark[storage_cell_number, gain_mode, : , :] += darks[frame]
-                d[storage_cell_number]+=1            
-        else:
-            skip_dict_counter = {i:0 for i in range(16)}
+    with np.errstate(divide="ignore", invalid="ignore"):
+        dark: NDArray[np.float_] = (sd / nd).astype(np.float32)
 
-            for frame in range(darks_shape[0]):
-                storage_cell_number = int(debug[frame]//256)%16
-                if storage_cell_number!=0:
-                    # take second 100
-                    if d[storage_cell_number]<100 and skip_dict_counter[storage_cell_number]<100:
-                        skip_dict_counter[storage_cell_number]+=1
-                    else:
-                        dark[storage_cell_number, gain_mode, : , :] += darks[frame]
-                        d[storage_cell_number]+=1
-                else:
-                    # take first 100
-                    if d[storage_cell_number]<100:
-                        dark[storage_cell_number, gain_mode, : , :] += darks[frame]
-                        d[storage_cell_number]+=1
-
-        dark_file.close()
-        for storage_cell_number, counter in d.items():
-            dark[storage_cell_number,gain_mode,:,:]/=counter
-
-    ## TODO pixels that don't have data in all gains, for all cells??
+    if np.any(nd == 0):
+        print("Some pixels don't have data in all gains:")
+        for i in range(3):
+            for j in range(16):
+                where: List[Tuple[NDArray[np.int_]]] = np.where(nd[i,j] == 0)
+                dark[i,j][where] = const_dark[i]
+                print(
+                f"{len(where[0])} pixels in gain {i} are set to {const_dark[i]}",
+            )
 
     with h5py.File(args.output, "w") as f:
-        f.create_dataset("/gain0", data=dark[:,0,:,:])
-        f.create_dataset("/gain1", data=dark[:,1,:,:])
-        f.create_dataset("/gain2", data=dark[:,2,:,:])
+        f.create_dataset("/gain0", data=dark[0].reshape(16, 512, 1024))
+        f.create_dataset("/gain1", data=dark[1].reshape(16, 512, 1024))
+        f.create_dataset("/gain2", data=dark[2].reshape(16, 512, 1024))
 
 if __name__ == "__main__":
     main()
