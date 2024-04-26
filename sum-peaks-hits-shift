@@ -28,7 +28,7 @@ reading_chunks = False
 reading_peaks = False
 max_fs = 1024
 max_ss = 1024
-is_centered = False
+is_a_hit = False
 
 for count, line in enumerate(stream):
     if reading_chunks:
@@ -36,7 +36,7 @@ for count, line in enumerate(stream):
             reading_peaks = False            
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
             reading_peaks = True
-        elif reading_peaks and is_centered:
+        elif reading_peaks and is_a_hit:
             fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
             powder[int(ss+shift_horizontal_px), int(fs-shift_vertical_px)] += 1e0*intensity
         elif line.split(': ')[0]=='Image filename':
@@ -49,10 +49,10 @@ for count, line in enumerate(stream):
         elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_x_in_mm":
             shift_horizontal_mm = float(line.split(' = ')[-1])
             shift_horizontal_px = shift_horizontal_mm * PixelResolution
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 0"):
-            is_centered = False
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 1"):
-            is_centered = True
+        elif line.startswith("hit = 1"):
+            is_a_hit = True
+        elif line.startswith("hit = 0"):
+            is_a_hit = False
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
         powder = np.zeros((2*max_ss + 1, 2*max_fs + 1))
@@ -70,6 +70,6 @@ for count, line in enumerate(stream):
     elif line.startswith('----- Begin chunk -----'):
         reading_chunks = True
 
-f = h5py.File(splitext(basename(sys.argv[1]))[0]+'-refined-powder-shift.h5', 'w')
+f = h5py.File(splitext(basename(sys.argv[1]))[0]+'-hits-powder-shift.h5', 'w')
 f.create_dataset('/data/data', data=powder[:max_ss,:max_fs])
 f.close()

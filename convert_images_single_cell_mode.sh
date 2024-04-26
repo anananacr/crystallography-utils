@@ -28,4 +28,4 @@ DARKS_D1=$3
 ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/converted
 echo $INP
 
-python3 convert_images.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/gainMaps_M524_sc00_2022-05-20.bin -g2 ${ROOT}/../darks/gainMaps_M525_sc00_2022-05-20.bin -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};
+python3 convert_images.py -p1 ${ROOT}/../darks/${DARKS_D0} -p2 ${ROOT}/../darks/${DARKS_D1} -g1 ${ROOT}/../darks/gainMaps_M524_sc15_2022-05-20.bin -g2 ${ROOT}/../darks/gainMaps_M525_sc15_2022-05-20.bin -i ${ROOT}/../../RAW_DATA/${INP} -o ${ROOT}/${INP};

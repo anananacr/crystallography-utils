@@ -15,47 +15,46 @@ import numpy as np
 import h5py
 from os.path import basename, splitext
 
+PixelResolution = 1 / (75 * 1e-3)
+
 if sys.argv[1] == '-':
     stream = sys.stdin
 else:
     stream = open(sys.argv[1], 'r')
 
-
-PixelResolution = 1 / (75 * 1e-3)
-
 reading_geometry = False
 reading_chunks = False
 reading_peaks = False
-max_fs = 1024
-max_ss = 1024
 is_centered = False
+max_fs = -100500
+max_ss = -100500
 
-for count, line in enumerate(stream):
+output = open(sys.argv[2], "w")
+file_name=""
+
+for line in stream:
     if reading_chunks:
         if line.startswith('End of peak list'):
-            reading_peaks = False            
+            reading_peaks = False
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
             reading_peaks = True
-        elif reading_peaks and is_centered:
-            fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
-            powder[int(ss+shift_horizontal_px), int(fs-shift_vertical_px)] += 1e0*intensity
-        elif line.split(': ')[0]=='Image filename':
-            file_name=line.split(': ')[-1][:-1]
-        elif line.split(': ')[0]=='Event':
-            event=int(line.split(': //')[-1])
-        elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_y_in_mm":
-            shift_vertical_mm = float(line.split(' = ')[-1])
-            shift_vertical_px = shift_vertical_mm * PixelResolution
+        elif line.split(': ')[0]=="Image filename":
+            file_name = line.split(': ')[1][:-1]+" "
+        elif line.split(' ')[0]=="Event:":
+            file_name += line.split(' ')[1]
+        elif line.startswith('hit = 0'):
+            is_a_hit = False
         elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_x_in_mm":
             shift_horizontal_mm = float(line.split(' = ')[-1])
             shift_horizontal_px = shift_horizontal_mm * PixelResolution
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 0"):
-            is_centered = False
+        elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_y_in_mm":
+            shift_vertical_mm = float(line.split(' = ')[-1])
+            shift_vertical_px = shift_vertical_mm * PixelResolution
         elif line.startswith("header/int//entry/shots/refined_center_flag = 1"):
-            is_centered = True
+                    output.write(file_name)
+                    file_name="" 
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
-        powder = np.zeros((2*max_ss + 1, 2*max_fs + 1))
     elif reading_geometry:
         try:
             par, val = line.split('=')
@@ -70,6 +69,4 @@ for count, line in enumerate(stream):
     elif line.startswith('----- Begin chunk -----'):
         reading_chunks = True
 
-f = h5py.File(splitext(basename(sys.argv[1]))[0]+'-refined-powder-shift.h5', 'w')
-f.create_dataset('/data/data', data=powder[:max_ss,:max_fs])
-f.close()
+output.close()

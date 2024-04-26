@@ -23,22 +23,30 @@ else:
 reading_geometry = False
 reading_chunks = False
 reading_peaks = False
+is_a_hit = True
 max_fs = -100500
 max_ss = -100500
-is_centered = False
+
+output = open(sys.argv[2], "w")
+file_name=""
 for line in stream:
     if reading_chunks:
         if line.startswith('End of peak list'):
             reading_peaks = False
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
             reading_peaks = True
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 0"):
-            is_centered = False
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 1"):
-            is_centered = True
-        elif reading_peaks and is_centered:
-            fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
-            powder[int(ss), int(fs)] += 1e0*intensity
+        elif line.split(': ')[0]=="Image filename":
+            file_name = line.split(': ')[1][:-1]+" "
+        elif line.split(' ')[0]=="Event:":
+            file_name += line.split(' ')[1]
+        elif line.startswith('hit = 1'):
+            is_a_hit = True
+            print(file_name)
+            output.write(file_name)
+            file_name=""
+        elif line.startswith('hit = 0'):
+            is_a_hit = False
+
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
         powder = np.zeros((max_ss + 1, max_fs + 1))
@@ -56,6 +64,4 @@ for line in stream:
     elif line.startswith('----- Begin chunk -----'):
         reading_chunks = True
 
-f = h5py.File(splitext(basename(sys.argv[1]))[0]+'-refined-powder.h5', 'w')
-f.create_dataset('/data/data', data=powder.astype(np.int32))
-f.close()
+output.close()
