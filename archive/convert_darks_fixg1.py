@@ -37,18 +37,19 @@ def main():
     dark_pattern = args.pedestal+"*"
 
     dark_filenames=sorted(glob.glob(f"{dark_pattern}"))
-    dark = np.zeros((16, 3, 512, 1024), dtype=np.float32)
+    n: int = 1024 * 512
+    sd = np.zeros((16, 3, n), dtype=np.float64)
+    nd = np.zeros((16, 3, n))
+
     panel_id: int
 
     for gain_mode in range(1,2):
 
-        d = {i:0 for i in range(16)}
         dark_filename=dark_filenames[0]
         dark_file: Any = h5py.File(dark_filename, "r")
         darks = dark_file["data_f000000000000"]
         debug = dark_file["debug"]
         darks_shape = darks.shape
-        print(darks.shape)
         storage_cell_number: int
 
         for frame in range(darks.shape[0]):
@@ -58,7 +59,10 @@ def main():
         
         dark_file.close()
         for storage_cell_number, counter in d.items():
-            dark[storage_cell_number,gain_mode,:,:]/=counter
+            if counter!=0:
+                dark[storage_cell_number,gain_mode,:,:]/=counter
+
+    ### bad_pixels set to zero
 
     with h5py.File(args.output, "w") as f:
         f.create_dataset("/gain0", data=dark[:,0,:,:])
