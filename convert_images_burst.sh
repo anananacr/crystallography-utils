@@ -4,6 +4,7 @@
 #SBATCH --requeue
 #SBATCH --nodes=1
 #SBATCH --mem=8G
+#SBATCH --nice=100
 
 #SBATCH --job-name  convert_jf
 #SBATCH --output /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/scratch_cc/rodria/error/convert-%N-%j.out
