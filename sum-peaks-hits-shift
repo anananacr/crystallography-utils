@@ -26,8 +26,8 @@ PixelResolution = 1 / (75 * 1e-3)
 reading_geometry = False
 reading_chunks = False
 reading_peaks = False
-max_fs = 1024
-max_ss = 1024
+max_fs = -100500
+max_ss = -100500
 is_a_hit = False
 
 for count, line in enumerate(stream):
