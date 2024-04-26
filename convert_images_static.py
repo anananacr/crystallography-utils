@@ -18,8 +18,6 @@ import pathlib
 
 dark = None
 gain = None
-fly_frames_to_merge = 1
-mode = 0 #"fly"
 photon_energy_in_kev=14.96
 
 def filter_data(data):
@@ -78,7 +76,7 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
 
 def main(raw_args=None):
     parser = argparse.ArgumentParser(
-        description="Convert JUNGFRAU 1M H5 images collected at REGAE for rotational data step/fly scan and return images in rotation sequence according tro the file index."
+        description="Convert JUNGFRAU 1M H5 images collected at ID09 in static mode."
     )
     parser.add_argument(
         "-i", "--input", type=str, action="store", help="hdf5 input image"
