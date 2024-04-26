@@ -1,7 +1,7 @@
 #!/bin/sh
 source /etc/profile.d/modules.sh
 module purge
-module load maxwell crystfel/0-devel
+module load maxwell crystfel/0.11.0
 ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria
 INPUT=$1
 OUTPUT=$2

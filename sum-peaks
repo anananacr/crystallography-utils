@@ -8,8 +8,8 @@
 #
 # Author:
 #    2017 Alexandra Tolstikova <alexandra.tolstikova@desy.de>
+#    2024 Ana Carolina Rodrigues <ana.rodrigues@desy.de>
 #
-
 import sys
 import numpy as np
 import h5py
