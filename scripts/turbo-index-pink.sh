@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=200  # Size of job chunks
+SPLIT=1000  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -22,7 +22,7 @@ STREAMDIR=$4
 # Set up environment here if necessary
 source /etc/profile.d/modules.sh
 module purge
-module load maxwell crystfel/0.11.0
+module load maxwell crystfel/0.10.2
 module load xray
 
 # Generate event list from file above
@@ -83,8 +83,8 @@ for FILE in split-events-${RUN}.lst*; do
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=0 --min-snr=7 --local-bg-radius=5 --min-pix-count=3 --max-pix-count=200 --min-res=0 --max-res=600 --min-peaks=10 --int-radius=4,6,7 --copy-header=/entry/data/raw_file_id "
-    command="$command --no-retry --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --no-check-peaks --no-refine --no-check-cell --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.04 --fix-profile-radius=0.002e9 --pinkIndexer-max-refinement-disbalance=0.4 --no-non-hits-in-stream --camera-length-estimate=0.0818"
+    command="$command --peaks=peakfinder8 --threshold=0 --min-snr=5 --local-bg-radius=3 --min-pix-count=2 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=4,6,7 --copy-header=/entry/data/raw_file_id "
+    command="$command --no-retry --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --no-check-peaks --no-refine --no-check-cell --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.04 --fix-profile-radius=0.002e9 --pinkIndexer-max-refinement-disbalance=0.4 --no-non-hits-in-stream --camera-length-estimate=0.0513"
     command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/lyso.cell"
     echo $command >> $SLURMFILE
 
