@@ -68,7 +68,7 @@ for count, line in enumerate(stream):
         reading_chunks = True
 
 
-bins = 0.05
+bins = 0.035
 xedges = np.arange(min(x_shift), max(x_shift), bins)
 yedges = np.arange(min(y_shift), max(y_shift), bins)
 
