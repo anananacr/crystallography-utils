@@ -154,17 +154,19 @@ def main():
     f = h5py.File(f"{args.input}", "r")
     data_shape = f["entry/data/data"].shape
     
-    converted_data = np.zeros(data_shape, dtype=np.int32)
-    is_hit_data = np.zeros(data_shape[0], dtype=bool)
-    storage_cell_number = np.zeros(data_shape[0], dtype=np.int16)
-    debug = np.zeros((data_shape[0],2), dtype=np.int16)
+    #converted_data = np.zeros(data_shape, dtype=np.int32)
+    #is_hit_data = np.zeros(data_shape[0], dtype=bool)
+    #storage_cell_number = np.zeros(data_shape[0], dtype=np.int16)
+    #debug = np.zeros((data_shape[0],2), dtype=np.int16)
 
     ## for EP data
-    #is_hit_data = np.zeros(10001, dtype=bool)
-    #converted_data = np.zeros((10001, *data_shape[1:]), dtype=np.int32)
+    converted_data = np.zeros((10001, *data_shape[1:]), dtype=np.int32)
+    is_hit_data = np.zeros(10001, dtype=bool)
+    storage_cell_number = np.zeros(10001, dtype=np.int16)
+    debug = np.zeros((10001,2), dtype=np.int16)
 
-    for i in range(data_shape[0]):
-    #for i in range(10001):
+    #for i in range(data_shape[0]):
+    for i in range(10001):
         storage_cell=int(f["/entry/data/debug"][i,0]//256)%16
         storage_cell_number[i]=storage_cell
         debug[i,:]=np.array(f["/entry/data/debug"][i])
