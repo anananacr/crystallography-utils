@@ -51,6 +51,7 @@ for line in stream:
             shift_vertical_mm = float(line.split(' = ')[-1])
             shift_vertical_px = shift_vertical_mm * PixelResolution
         elif line.startswith("header/int//entry/shots/refined_center_flag = 1"):
+        #elif line.startswith("header/int//entry/shots/refined_center_flag = 1") and shift_vertical_mm<3.15 and shift_vertical_mm>1.65 and shift_horizontal_mm<-0.5 and shift_horizontal_mm>-1.5:
                     output.write(file_name)
                     file_name="" 
     elif line.startswith('----- End geometry file -----'):
