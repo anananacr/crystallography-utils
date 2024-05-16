@@ -1,5 +1,5 @@
 """
-Based on Yaroslov Gevorkov script for orientation vectors.
+Based on Yaroslav Gevorkov script for orientation vectors.
 """
 
 import numpy as np
