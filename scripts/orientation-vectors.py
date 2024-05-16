@@ -1,3 +1,7 @@
+"""
+Based on Yaroslov Gevorkov script for orientation vectors.
+"""
+
 import numpy as np
 import re
 import sys
@@ -26,13 +30,13 @@ if not os.path.exists(output_path):
     os.mkdir(output_path)
 
 print(output_path)
-colors = ["r", "g", "b"]
+
 xStarNames = ["astar","bstar","cstar"]
 
 
 # Creating the theta and phi values.
 
-intervals = 50
+intervals = 100
 ntheta = intervals
 nphi = 2*intervals
 print(np.pi/ntheta)
@@ -70,7 +74,7 @@ for i in np.arange(3):
 
     c=np.log(c)
     c/=np.max(c)
-    fig = plt.figure()
+    fig = plt.figure(figsize=(10,10))
     ax = fig.add_subplot( 1, 1, 1, projection='3d')
     cm = mpl.cm.viridis
     sm = mpl.cm.ScalarMappable(cmap=cm)
