@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=100  # Size of job chunks
+SPLIT=500  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -64,9 +64,11 @@ for FILE in split-events-${RUN}.lst*; do
     echo >> $SLURMFILE
 
     echo "#SBATCH --partition=allcpu" >> $SLURMFILE  # Set your partition here
-    echo "#SBATCH --time=2-00:00:00" >> $SLURMFILE
+    #echo "#SBATCH --partition=cfel" >> $SLURMFILE  # Set your partition here
+    #echo "#SBATCH --time=2-00:00:00" >> $SLURMFILE
+    echo "#SBATCH --time=0-10:00:00" >> $SLURMFILE
     echo "#SBATCH --nodes=1" >> $SLURMFILE
-    # It may be polite to set the priority very low to allow other jobs through:
+    # It may be polite to set the niceness very high (low priority) to allow other jobs through:
     echo "#SBATCH --nice=100" >> $SLURMFILE
     echo >> $SLURMFILE
 
@@ -83,9 +85,15 @@ for FILE in split-events-${RUN}.lst*; do
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=0 --min-snr=5 --local-bg-radius=5 --min-pix-count=2 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=4,6,8 --copy-header=/entry/data/raw_file_id "
-    command="$command --no-retry --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --no-check-peaks --no-refine --no-check-cell --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.04 --fix-profile-radius=0.001 --pinkIndexer-max-refinement-disbalance=0.4 --no-non-hits-in-stream --camera-length-estimate=0.08208"
-    command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/lyso.cell"
+    command="$command --peaks=peakfinder8 --threshold=100 --min-snr=5 --local-bg-radius=5 --min-pix-count=3 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=5,7,9 --copy-header=/entry/data/raw_file_id "
+    command="$command --no-retry --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --no-check-peaks --no-refine --no-check-cell --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.06 --fix-profile-radius=0.0003 --pinkIndexer-max-refinement-disbalance=1.8 --no-non-hits-in-stream --camera-length-estimate=0.0820 "
+    #command="$command --indexing=mosflm"
+    #command="$command --copy-header=/entry/data/storage_cell_number"
+    #command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/lyso.cell"
+    command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/ep_apo_0.cell"
+    #command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/fakp_e07_0.cell"
+    #command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/fakp_latt.cell"
+
     echo $command >> $SLURMFILE
 
     sbatch $SLURMFILE
