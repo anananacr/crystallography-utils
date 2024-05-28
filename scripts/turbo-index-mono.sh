@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=1000  # Size of job chunks
+SPLIT=2000  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -56,8 +56,8 @@ for FILE in split-events-${RUN}.lst*; do
     NUMBER=${NAME##$RUN-}
     POS=`expr $NUMBER \* $SPLIT + 1`
 
-    MILLE_DIR=$STREAMDIR/mille_$NUMBER
-    mkdir $MILLE_DIR
+    #MILLE_DIR=$STREAMDIR/mille_$NUMBER
+    #mkdir $MILLE_DIR
 
     echo "$NAME (serial start $POS): $FILE  --->  $STREAM"
 
@@ -90,7 +90,7 @@ for FILE in split-events-${RUN}.lst*; do
     command="$command --peaks=peakfinder8 --threshold=20 --min-snr=5 --local-bg-radius=3 --min-pix-count=2 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry/data/raw_file_id --copy-header=/entry/shots/refined_center_flag"
     #command="$command --indexing=mosflm"
     command="$command --indexing=xgandalf,asdf"
-    command="$command --mille --mille-dir=$MILLE_DIR"
+    #command="$command --mille --mille-dir=$MILLE_DIR"
     command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/lyso.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_0.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_latt.cell"

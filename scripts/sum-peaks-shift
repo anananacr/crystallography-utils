@@ -38,7 +38,7 @@ for count, line in enumerate(stream):
             reading_peaks = True
         elif reading_peaks and is_centered:
             fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
-            powder[int(ss+shift_horizontal_px), int(fs-shift_vertical_px)] += 1e0*intensity
+            powder[int(ss+shift_horizontal_px), int(fs-shift_vertical_px)] += 1e-1*intensity
         elif line.split(': ')[0]=='Image filename':
             file_name=line.split(': ')[-1][:-1]
         elif line.split(': ')[0]=='Event':
@@ -55,7 +55,7 @@ for count, line in enumerate(stream):
             is_centered = True
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
-        powder = np.zeros((2*max_ss + 1, 2*max_fs + 1))
+        powder = np.zeros((2*max_ss + 1, 2*max_fs + 1), dtype=np.int32)
     elif reading_geometry:
         try:
             par, val = line.split('=')
