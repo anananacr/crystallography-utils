@@ -39,7 +39,7 @@ for i in $(seq $START 1 $END); do
     echo "module purge" >> $SLURMFILE
     echo "source /gpfs/cfel/user/rodria/software/beambusters-env/bin/activate" >> $SLURMFILE
     echo >> $SLURMFILE
-    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_lyso.yaml"
+    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_fakp.yaml"
     echo $command >> $SLURMFILE
     echo "chmod a+rw $PWD" >> $SLURMFILE
     sbatch $SLURMFILE 
