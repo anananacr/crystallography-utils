@@ -47,7 +47,6 @@ for line in stream:
         elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_y_in_mm":
             shift_vertical_mm = float(line.split(' = ')[-1])
             shift_vertical_px = shift_vertical_mm * PixelResolution
-        #elif line.startswith('hit = 1') and shift_vertical_mm<-0.4 and shift_vertical_mm>-8 and shift_horizontal_mm<0.46 and shift_horizontal_mm>-0.2:
         elif line.startswith('hit = 1'):
             is_a_hit = True
             print(file_name)

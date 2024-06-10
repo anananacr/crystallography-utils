@@ -87,10 +87,10 @@ for FILE in split-events-${RUN}.lst*; do
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=20 --min-snr=5 --local-bg-radius=3 --min-pix-count=2 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry/data/raw_file_id --copy-header=/entry/shots/refined_center_flag"
+    command="$command --peaks=peakfinder8 --threshold=30 --min-snr=4 --local-bg-radius=3 --min-pix-count=2 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry/data/raw_file_id --copy-header=/entry/shots/refined_center_flag"
     #command="$command --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=7"
     #command="$command --indexing=mosflm"
-    #command="$command --xgandalf-min-lattice-vector-length=45.26 --tolerance=5,5,1,1.5"
+    command="$command --xgandalf-min-lattice-vector-length=37.6 --xgandalf-min-lattice-vector-length=78.8 --tolerance=0.7,0.7,5,1.5"
     #command="$command  --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=7 --xgandalf-max-lattice-vector-length=90.89 --xgandalf-min-lattice-vector-length=45.26 --xgandalf-tolerance=0.01 --multi"
     #command="$command  --xgandalf-grad-desc-iterations=4 --xgandalf-sampling-pitch=6 --xgandalf-min-lattice-vector-length=45.26 --xgandalf-max-lattice-vector-length=91.62 --xgandalf-tolerance=0.01 --multi"
 
