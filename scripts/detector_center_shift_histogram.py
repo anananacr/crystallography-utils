@@ -68,20 +68,28 @@ for count, line in enumerate(stream):
         reading_chunks = True
 
 
-bins = 0.01
-xedges = np.arange(min(x_shift), max(x_shift), bins)
-yedges = np.arange(min(y_shift), max(y_shift), bins)
+y_bins = 0.1
+x_bins = 0.6
 
+xedges=[min(x_shift), max(x_shift)]
+#xedges = np.arange(min(x_shift), max(x_shift), x_bins)
+yedges = np.arange(min(y_shift), max(y_shift), y_bins)
 
+print(xedges, yedges)
 fig = plt.figure(figsize=(10, 10))
 ax = fig.add_subplot(111, title="Detector center shift (mm)")
 ax.set_xlabel("Detector center shift in x (mm)")
 ax.set_ylabel("Detector center shift in y (mm)")
+
+ax.set_xlim(-0.3,0.1)
+ax.set_ylim(-7.5,0)
+
 H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(xedges, yedges))
 H = H.T
 Hmasked = np.ma.masked_where(H==0,H)
+
 X, Y = np.meshgrid(xedges, yedges)
 pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm")
 fig.colorbar(pos)
 plt.grid()
-plt.savefig("fakp_e12_01.png")
+plt.savefig("lyso_sweep_p09.png")

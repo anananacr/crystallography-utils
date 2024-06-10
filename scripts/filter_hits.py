@@ -15,6 +15,8 @@ import numpy as np
 import h5py
 from os.path import basename, splitext
 
+PixelResolution = 1 / (75 * 1e-3)
+
 if sys.argv[1] == '-':
     stream = sys.stdin
 else:
@@ -39,6 +41,12 @@ for line in stream:
             file_name = line.split(': ')[1][:-1]+" "
         elif line.split(' ')[0]=="Event:":
             file_name += line.split(' ')[1]
+        elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_x_in_mm":
+            shift_horizontal_mm = float(line.split(' = ')[-1])
+            shift_horizontal_px = shift_horizontal_mm * PixelResolution
+        elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_y_in_mm":
+            shift_vertical_mm = float(line.split(' = ')[-1])
+            shift_vertical_px = shift_vertical_mm * PixelResolution
         elif line.startswith('hit = 1'):
             is_a_hit = True
             print(file_name)
