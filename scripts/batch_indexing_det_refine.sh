@@ -8,12 +8,12 @@
 #SBATCH --mem=10G
 #SBATCH --nice=100
 #SBATCH --job-name  bb
-#SBATCH --output   /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/error/bb-%N-%j.out
-#SBATCH --error    /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/error/bb-%N-%j.err
+#SBATCH --output   /path/to/rodria/error/bb-%N-%j.out
+#SBATCH --error    /path/to/rodria/error/bb-%N-%j.err
 
 INPUT=$1
 OUTPUT=$2
-ROOT=/gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria
+ROOT=/path/to7rodria
 
 source /etc/profile.d/modules.sh
 module purge

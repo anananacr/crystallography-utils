@@ -27,12 +27,15 @@ reading_peaks = False
 max_fs = -100500
 max_ss = -100500
 is_centered = False
+is_indexed = False
+
 
 for count, line in enumerate(stream):
     if reading_chunks:
         if line.startswith('End of peak list'):
             reading_peaks = False
             if is_centered:
+            #if is_centered and is_indexed:
                 x_shift.append(shift_horizontal_mm)
                 y_shift.append(shift_vertical_mm)                 
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
@@ -41,6 +44,11 @@ for count, line in enumerate(stream):
             file_name=line.split(': ')[-1][:-1]
         elif line.split(': ')[0]=='Event':
             event=int(line.split(': //')[-1])
+        elif line.split(' = ')[0] == 'indexed_by':
+            if line.split(' = ')[-1] == "none":
+                is_indexed = False
+            else:
+                is_indexed = True
         elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_y_in_mm":
             shift_vertical_mm = float(line.split(' = ')[-1])
         elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_x_in_mm":
@@ -68,23 +76,15 @@ for count, line in enumerate(stream):
         reading_chunks = True
 
 
-y_bins = 0.1
-x_bins = 0.6
-
-xedges=[min(x_shift), max(x_shift)]
-#xedges = np.arange(min(x_shift), max(x_shift), x_bins)
-yedges = np.arange(min(y_shift), max(y_shift), y_bins)
-
-print(xedges, yedges)
-fig = plt.figure(figsize=(10, 10))
+fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, title="Detector center shift (mm)")
 ax.set_xlabel("Detector center shift in x (mm)")
 ax.set_ylabel("Detector center shift in y (mm)")
 
-ax.set_xlim(-0.3,0.1)
-ax.set_ylim(-7.5,0)
+ax.set_xlim(-0.4,0.6)
+ax.set_ylim(-1.0,-0.4)
 
-H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(xedges, yedges))
+H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(50,50))
 H = H.T
 Hmasked = np.ma.masked_where(H==0,H)
 
@@ -92,4 +92,4 @@ X, Y = np.meshgrid(xedges, yedges)
 pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm")
 fig.colorbar(pos)
 plt.grid()
-plt.savefig("lyso_sweep_p09.png")
+plt.savefig("231222_mica_001.png")

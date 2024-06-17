@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=500  # Size of job chunks
+SPLIT=50  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -26,14 +26,14 @@ module load maxwell crystfel/0.11.0
 module load xray
 
 # Generate event list from file above
-#list_events -i $INPUT -g $GEOM -o events-${RUN}.lst
-#if [ $? != 0 ]; then
-#       echo "list_events failed"
-#       exit 1
-#fi
+list_events -i $INPUT -g $GEOM -o events-${RUN}.lst
+if [ $? != 0 ]; then
+       echo "list_events failed"
+       exit 1
+fi
 # If you are using single-event files instead of multi-event ("CXI") ones,
 # comment out the above lines and uncomment the following one:
-cp $INPUT events-${RUN}.lst
+#cp $INPUT events-${RUN}.lst
 
 # Count total number of events
 wc -l events-${RUN}.lst
@@ -85,17 +85,12 @@ for FILE in split-events-${RUN}.lst*; do
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=100 --min-snr=5 --local-bg-radius=5 --min-pix-count=3 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=10 --int-radius=5,7,9 --copy-header=/entry/data/raw_file_id "
-    command="$command --no-retry --indexing=pinkIndexer --pinkIndexer-considered-peaks-count=4 --no-check-peaks --no-refine --no-check-cell --pinkIndexer-angle-resolution=4 --pinkIndexer-refinement-type=3 --pinkIndexer-tolerance=0.06 --fix-profile-radius=0.0003 --pinkIndexer-max-refinement-disbalance=1.8 --no-non-hits-in-stream --camera-length-estimate=0.0820 "
-    #command="$command --indexing=mosflm"
-    #command="$command --copy-header=/entry/data/storage_cell_number"
-    #command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/lyso.cell"
-    command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/ep_apo_0.cell"
-    #command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/fakp_e07_0.cell"
-    #command="$command -p /gpfs/cfel/group/cxi/scratch/2021/ESRF-2024-Meents-Mar-ID09/processed/rodria/cell/fakp_latt.cell"
-
+    command="$command --peaks=peakfinder8 --threshold=10 --min-snr=3.5 --local-bg-radius=6 --min-pix-count=3 --max-pix-count=100 --min-res=0 --max-res=450 --min-peaks=10 --int-radius=9,12,14 "
+    #command="$command --peaks=zaef --threshold=800 --min-squared-gradient=50000 --min-snr=5 --local-bg-radius=6 --min-pix-count=3 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=2 --int-radius=6,9,12 --pinkIndexer-refinement-type=2 --pinkIndexer-angle-resolution=4 "
+    command="$command --pinkIndexer-max-resolution-for-indexing=1.2 --pinkIndexer-angle-resolution=4 --pinkIndexer-tolerance=0.1 --indexing=pinkindexer --no-retry --pinkIndexer-reflection-radius=0.02 --pinkIndexer-max-refinement-disbalance=2 --pinkIndexer-refinement-type=3 --camera-length-estimate=4.875 --copy-header=/entry/data/raw_file_id"
+    #command="--pinkIndexer-refinement-type=3  --pinkIndexer-angle-resolution=4  --pinkIndexer-considered-peaks-count=4 --pinkIndexer-tolerance=0.1"
+    command="$command -p/path/to/cell/mica.cell"
     echo $command >> $SLURMFILE
-
     sbatch $SLURMFILE
 done
 

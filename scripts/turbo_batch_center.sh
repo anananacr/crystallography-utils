@@ -4,7 +4,7 @@
 INPUT=$1
 START=$2
 END=$3
-ROOT=/asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria
+ROOT=/path/to/
 
 for i in $(seq $START 1 $END); do
     if [ "$i" -le 9 ]; then
@@ -28,8 +28,8 @@ for i in $(seq $START 1 $END); do
     echo "#SBATCH --chdir   $PWD" >> $SLURMFILE
     echo "#SBATCH --job-name  $JNAME" >> $SLURMFILE
     echo "#SBATCH --requeue" >> $SLURMFILE
-    echo "#SBATCH --output    /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/error/${NAME}-%N-%j.out" >> $SLURMFILE
-    echo "#SBATCH --error     /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/error/${NAME}-%N-%j.err" >> $SLURMFILE
+    echo "#SBATCH --output    /path/to//error/${NAME}-%N-%j.out" >> $SLURMFILE
+    echo "#SBATCH --error     /path/to//error/${NAME}-%N-%j.err" >> $SLURMFILE
     echo "#SBATCH --nice=100" >> $SLURMFILE
     echo "#SBATCH --mincpus=64" >> $SLURMFILE
     echo "#SBATCH --mem=20G" >> $SLURMFILE
@@ -39,7 +39,7 @@ for i in $(seq $START 1 $END); do
     echo "module purge" >> $SLURMFILE
     echo "source /gpfs/cfel/user/rodria/software/beambusters-env/bin/activate" >> $SLURMFILE
     echo >> $SLURMFILE
-    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_lyso.yaml"
+    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_electrons.yaml"
     echo $command >> $SLURMFILE
     echo "chmod a+rw $PWD" >> $SLURMFILE
     sbatch $SLURMFILE 
