@@ -14,6 +14,7 @@ import sys
 import numpy as np
 import h5py
 from os.path import basename, splitext
+import statistics
 import matplotlib.pyplot as plt
 
 if sys.argv[1] == '-':
@@ -75,14 +76,19 @@ for count, line in enumerate(stream):
     elif line.startswith('----- Begin chunk -----'):
         reading_chunks = True
 
+mean_x=statistics.mean(x_shift)
+mean_y=statistics.mean(y_shift)
+
+x_shift=[i-mean_x for i in x_shift ]
+y_shift=[i-mean_y for i in y_shift ]
 
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, title="Detector center shift (mm)")
 ax.set_xlabel("Detector center shift in x (mm)")
 ax.set_ylabel("Detector center shift in y (mm)")
 
-ax.set_xlim(-0.4,0.6)
-ax.set_ylim(-1.0,-0.4)
+ax.set_xlim(-0.5,0.5)
+ax.set_ylim(-0.5,0.5)
 
 H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(50,50))
 H = H.T
@@ -92,4 +98,8 @@ X, Y = np.meshgrid(xedges, yedges)
 pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm")
 fig.colorbar(pos)
 plt.grid()
-plt.savefig("231222_mica_001.png")
+#plt.savefig("231222_mica_002.png")
+f=open("231222_mica_001.txt", "w")
+for idx,i in enumerate(x_shift):
+    f.write(f"{i},{y_shift[idx]}\n")
+f.close()
