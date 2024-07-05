@@ -63,10 +63,10 @@ for FILE in split-events-${RUN}.lst*; do
     echo "#!/bin/sh" > $SLURMFILE
     echo >> $SLURMFILE
 
-    echo "#SBATCH --partition=allcpu" >> $SLURMFILE  # Set your partition here
+    echo "#SBATCH --partition=partition" >> $SLURMFILE  # Set your partition here
     #echo "#SBATCH --partition=cfel" >> $SLURMFILE  # Set your partition here
     #echo "#SBATCH --time=2-00:00:00" >> $SLURMFILE
-    echo "#SBATCH --time=0-10:00:00" >> $SLURMFILE
+    echo "#SBATCH --time=0-0:40:00" >> $SLURMFILE
     echo "#SBATCH --nodes=1" >> $SLURMFILE
     # It may be polite to set the niceness very high (low priority) to allow other jobs through:
     echo "#SBATCH --nice=100" >> $SLURMFILE
@@ -80,16 +80,19 @@ for FILE in split-events-${RUN}.lst*; do
     echo >> $SLURMFILE
     echo "module purge" >> $SLURMFILE
     echo "module load maxwell crystfel/0.11.0" >> $SLURMFILE  # Set up environment here (again) if necessary
+    #echo "module load maxwell crystfel/0-devel" >> $SLURMFILE  # Set up environment here (again) if necessary
     echo "module load xray" >> $SLURMFILE
     echo >> $SLURMFILE
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=10 --min-snr=3.5 --local-bg-radius=6 --min-pix-count=3 --max-pix-count=100 --min-res=0 --max-res=450 --min-peaks=10 --int-radius=9,12,14 "
-    #command="$command --peaks=zaef --threshold=800 --min-squared-gradient=50000 --min-snr=5 --local-bg-radius=6 --min-pix-count=3 --max-pix-count=200 --min-res=0 --max-res=1200 --min-peaks=2 --int-radius=6,9,12 --pinkIndexer-refinement-type=2 --pinkIndexer-angle-resolution=4 "
-    command="$command --pinkIndexer-max-resolution-for-indexing=1.2 --pinkIndexer-angle-resolution=4 --pinkIndexer-tolerance=0.1 --indexing=pinkindexer --no-retry --pinkIndexer-reflection-radius=0.02 --pinkIndexer-max-refinement-disbalance=2 --pinkIndexer-refinement-type=3 --camera-length-estimate=4.875 --copy-header=/entry/data/raw_file_id"
-    #command="--pinkIndexer-refinement-type=3  --pinkIndexer-angle-resolution=4  --pinkIndexer-considered-peaks-count=4 --pinkIndexer-tolerance=0.1"
-    command="$command -p/path/to/cell/mica.cell"
+    #command="$command --peaks=peakfinder8 --threshold=0 --min-snr=5 --local-bg-radius=6 --min-pix-count=4 --max-pix-count=2000 --min-res=0 --max-res=450 --min-peaks=2 --int-radius=8,10,12 --no-check-peaks "
+    command="$command --peaks=zaef --threshold=50 --min-squared-gradient=50 --min-snr=3 --min-res=0 --max-res=450 --min-peaks=2 --int-radius=6,8,10 --no-check-peaks --no-refine"
+    command="$command --pinkIndexer-max-resolution-for-indexing=1.2 --pinkIndexer-considered-peaks-count=4 --pinkIndexer-angle-resolution=4 --pinkIndexer-tolerance=0.1 --indexing=pinkindexer --no-retry --pinkIndexer-reflection-radius=0.005 --pinkIndexer-max-refinement-disbalance=2 --pinkIndexer-refinement-type=2 --camera-length-estimate=4.845 --copy-header=/entry/data/raw_file_id"
+    #command="--pinkIndexer-refinement-type=3 --pinkIndexer-angle-resolution=4 --pinkIndexer-tolerance=0.1"
+    #command="$command --indexing=mosflm"
+    #command="$command --peaks=peakfinder8 --threshold=20 --min-snr=4 --local-bg-radius=8 --min-pix-count=4 --max-pix-count=2000 --min-res=0 --max-res=300 --min-peaks=6 --int-radius=8,10,12 --no-check-peaks "
+    #command="$command --peaks=zaef --threshold=100 --min-snr=3 --min-squared-gradient=50000 --min-res=0 --max-res=450 --min-peaks=6 --int-radius=8,10,12 --no-check-peaks "
     echo $command >> $SLURMFILE
     sbatch $SLURMFILE
 done

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SBATCH --partition=allcpu,upex
+#SBATCH --partition=partition
 #SBATCH --time=2-00:00:00
 #SBATCH --requeue
 #SBATCH --nodes=1
@@ -18,7 +18,7 @@ source /etc/profile.d/modules.sh
 module purge
 source /path/to/beambusters-env/bin/activate
 
-command="beambusters run_centering ${ROOT}/lists/${INPUT} ${ROOT}/config/config_231222_mica_001.yaml"
+command="beambusters run_centering ${ROOT}/lists/${INPUT} ${ROOT}/config/config.yaml"
 
 echo $command
 $command
