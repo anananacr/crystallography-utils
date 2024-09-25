@@ -1,23 +1,22 @@
 #!/bin/sh
-## ./turbo_batch_center.sh split_list_file start_index end_index
+## ./generate_vds.sh start_index end_index
 
-INPUT=$1
-START=$2
-END=$3
-ROOT=/path/to/
+START=$1
+END=$2
+ROOT=/gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria
 
 for i in $(seq $START 1 $END); do
     if [ "$i" -le 9 ]; then
-        LIST_NAME=${INPUT}.lst00${i}
+        RUN_NAME=r000${i}
     elif [ "$i" -ge 10 ] && [ "$i" -le 99 ]; then
-        LIST_NAME=${INPUT}.lst0${i}
+        RUN_NAME=r00${i}
     else
-        LIST_NAME=${INPUT}.lst${i}
+        RUN_NAME=r0${i}
     fi
     
-    LABEL=center_${i}
-    JNAME="center_${i}"
-    NAME="center_${i}_${INPUT}"
+    LABEL=new_${i}
+    JNAME="new_${i}"
+    NAME="new_${i}_${INPUT}"
     SLURMFILE="${NAME}_${INPUT}.sh"
     echo "#!/bin/sh" > $SLURMFILE
     echo >> $SLURMFILE
@@ -28,18 +27,18 @@ for i in $(seq $START 1 $END); do
     echo "#SBATCH --chdir   $PWD" >> $SLURMFILE
     echo "#SBATCH --job-name  $JNAME" >> $SLURMFILE
     echo "#SBATCH --requeue" >> $SLURMFILE
-    echo "#SBATCH --output    /path/to//error/${NAME}-%N-%j.out" >> $SLURMFILE
-    echo "#SBATCH --error     /path/to//error/${NAME}-%N-%j.err" >> $SLURMFILE
+    echo "#SBATCH --output    /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/error/${NAME}-%N-%j.out" >> $SLURMFILE
+    echo "#SBATCH --error     /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/error/${NAME}-%N-%j.err" >> $SLURMFILE
     echo "#SBATCH --nice=100" >> $SLURMFILE
-    echo "#SBATCH --mincpus=64" >> $SLURMFILE
-    echo "#SBATCH --mem=20G" >> $SLURMFILE
+    echo "#SBATCH --mincpus=4" >> $SLURMFILE
+    echo "#SBATCH --mem=4G" >> $SLURMFILE
     echo >> $SLURMFILE
     echo "unset LD_PRELOAD" >> $SLURMFILE
     echo "source /etc/profile.d/modules.sh" >> $SLURMFILE
     echo "module purge" >> $SLURMFILE
-    echo "source /gpfs/cfel/user/rodria/software/beambusters-env/bin/activate" >> $SLURMFILE
+    echo "module load exfel exfel-python" >> $SLURMFILE
     echo >> $SLURMFILE
-    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_electrons.yaml"
+    command="extra-data-make-virtual-cxi /gpfs/exfel/exp/SPB/202425/p008396/proc/${RUN_NAME} -o /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/centered/${RUN_NAME}.cxi"
     echo $command >> $SLURMFILE
     echo "chmod a+rw $PWD" >> $SLURMFILE
     sbatch $SLURMFILE 
