@@ -128,7 +128,6 @@ def main():
     
     if args.mask_greater_than is not None:
         acc_data[np.where(acc_data>args.mask_greater_than)]=0
-        print("hi")
 
     with h5py.File(args.output, "w") as f:
         f.create_dataset(f"{h5_data_path}", data=(acc_data).astype(np.int32))
