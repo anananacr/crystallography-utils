@@ -7,7 +7,6 @@
 #                       a research centre of the Helmholtz Association.
 #
 # Author:
-#    2017 Alexandra Tolstikova <alexandra.tolstikova@desy.de>
 #    2024 Ana Carolina Rodrigues <ana.rodrigues@desy.de>
 
 import sys
@@ -35,8 +34,8 @@ for count, line in enumerate(stream):
     if reading_chunks:
         if line.startswith('End of peak list'):
             reading_peaks = False
-            if is_centered:
-            #if is_centered and is_indexed:
+            #if is_centered:
+            if is_indexed:
                 x_shift.append(shift_horizontal_mm)
                 y_shift.append(shift_vertical_mm)                 
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
@@ -50,9 +49,9 @@ for count, line in enumerate(stream):
                 is_indexed = False
             else:
                 is_indexed = True
-        elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_y_in_mm":
+        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_y_in_mm":
             shift_vertical_mm = float(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/float//entry/shots/detector_shift_x_in_mm":
+        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_x_in_mm":
             shift_horizontal_mm = float(line.split(' = ')[-1])
         elif line.startswith("header/int//entry/shots/refined_center_flag = 0"):
             is_centered = False
@@ -76,30 +75,30 @@ for count, line in enumerate(stream):
     elif line.startswith('----- Begin chunk -----'):
         reading_chunks = True
 
-mean_x=statistics.mean(x_shift)
-mean_y=statistics.mean(y_shift)
+#mean_x=statistics.mean(x_shift)
+#mean_y=statistics.mean(y_shift)
 
-x_shift=[i-mean_x for i in x_shift ]
-y_shift=[i-mean_y for i in y_shift ]
+#x_shift=[i-mean_x for i in x_shift ]
+#y_shift=[i-mean_y for i in y_shift ]
 
 fig = plt.figure(figsize=(8, 8))
 ax = fig.add_subplot(111, title="Detector center shift (mm)")
 ax.set_xlabel("Detector center shift in x (mm)")
 ax.set_ylabel("Detector center shift in y (mm)")
 
-ax.set_xlim(-0.5,0.5)
-ax.set_ylim(-0.5,0.5)
+ax.set_xlim(-5,5)
+ax.set_ylim(1,-9)
 
-H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(50,50))
+H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(100,100))
 H = H.T
 Hmasked = np.ma.masked_where(H==0,H)
 
 X, Y = np.meshgrid(xedges, yedges)
-pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm")
+pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm", vmax=100)
 fig.colorbar(pos)
 plt.grid()
-#plt.savefig("231222_mica_002.png")
-f=open("231222_mica_001.txt", "w")
+plt.savefig("lyso_sweep.png")
+f=open("lyso_sweep.txt", "w")
 for idx,i in enumerate(x_shift):
     f.write(f"{i},{y_shift[idx]}\n")
 f.close()

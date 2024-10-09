@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=50000  # Size of job chunks
+SPLIT=500000  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -66,14 +66,14 @@ for FILE in split-events-${RUN}.lst*; do
     echo "#!/bin/sh" > $SLURMFILE
     echo >> $SLURMFILE
 
-    echo "#SBATCH --partition=upex" >> $SLURMFILE  # Set your partition here
+    echo "#SBATCH --partition=allcpu,upex" >> $SLURMFILE  # Set your partition here
     echo "#SBATCH --time=0-02:00:00" >> $SLURMFILE
     #echo "#SBATCH --time=0-10:00:00" >> $SLURMFILE
     echo "#SBATCH --nodes=1" >> $SLURMFILE
     # It may be polite to set the niceness very high (low priority) to allow other jobs through:
-    echo "#SBATCH --nice=100" >> $SLURMFILE
+    echo "#SBATCH --nice=0" >> $SLURMFILE
     echo >> $SLURMFILE
-    echo "#SBATCH --mincpus=128" >> $SLURMFILE
+    echo "#SBATCH --mincpus=64" >> $SLURMFILE
     echo "#SBATCH --job-name  $NAME" >> $SLURMFILE
     echo "#SBATCH --output    $NAME-%N-%j.out" >> $SLURMFILE
     echo "#SBATCH --error     $NAME-%N-%j.err" >> $SLURMFILE
@@ -81,20 +81,21 @@ for FILE in split-events-${RUN}.lst*; do
     #echo "#SBATCH --mail-user $MAIL" >> $SLURMFILE
     echo >> $SLURMFILE
     echo "module purge" >> $SLURMFILE
-    echo "module load maxwell crystfel/0.11.0" >> $SLURMFILE  # Set up environment here (again) if necessary
+    echo "module load maxwell crystfel/0.11.0; module load maxwell xray" >> $SLURMFILE  # Set up environment here (again) if necessary
     echo >> $SLURMFILE
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
-    command="$command -j 128 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=200 --min-snr=5 --local-bg-radius=5 --min-pix-count=3 --max-pix-count=40 --min-res=0 --max-res=1350 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry_1/instrument_1/pre_centering_flag --copy-header=/entry_1/instrument_1/hit --copy-header=/entry_1/instrument_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
+    command="$command -j 64 -g $GEOM"
+    command="$command --peaks=peakfinder8 --threshold=200 --min-snr=5 --local-bg-radius=4 --min-pix-count=3 --max-pix-count=30 --min-res=100 --max-res=1665 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry_1/instrument_1/pre_centering_flag --copy-header=/entry_1/instrument_1/hit --copy-header=/entry_1/instrument_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
     #command="$command --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=7"
-    command="$command --indexing=mosflm-latt-cell"
+    #command="$command --indexing=mosflm-latt-cell"
+    command="$command --indexing=mosflm-latt-nocell"
     command="$command --multi"
     #command="$command --xgandalf-min-lattice-vector-length=37.6 --xgandalf-min-lattice-vector-length=78.8 --tolerance=0.7,0.7,5,1.5"
     #command="$command  --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=7 --xgandalf-max-lattice-vector-length=90.89 --xgandalf-min-lattice-vector-length=45.26 --xgandalf-tolerance=0.01 --multi"
     #command="$command  --xgandalf-grad-desc-iterations=4 --xgandalf-sampling-pitch=6 --xgandalf-min-lattice-vector-length=45.26 --xgandalf-max-lattice-vector-length=91.62 --xgandalf-tolerance=0.01 --multi"
     #command="$command --mille --mille-dir=$MILLE_DIR"
-    command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/lyso.cell"
+    command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/lyso_latt.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_sweep_2.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_si_2.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_latt.cell"
