@@ -26,10 +26,7 @@ f.close()
 
 output_path = os.path.dirname(os.path.abspath(streamFileName))  + '/plots_res'
 if not os.path.exists(output_path):
-    print(20)
     os.mkdir(output_path)
-
-print(output_path)
 
 xStarNames = ["astar","bstar","cstar"]
 
@@ -84,8 +81,8 @@ for i in np.arange(3):
     plt.xlabel("î")
     plt.ylabel("ĵ")
     plt.colorbar(ax)
+    out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_" + xStarNames[i])+'.png'
+    plt.savefig(out)
     plt.show()
     c = np.zeros((ntheta, nphi))
     plt.close()
-    out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_" + xStarNames[i])+'.png'
-
