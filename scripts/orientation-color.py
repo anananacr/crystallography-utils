@@ -26,17 +26,14 @@ f.close()
 
 output_path = os.path.dirname(os.path.abspath(streamFileName))  + '/plots_res'
 if not os.path.exists(output_path):
-    print(20)
     os.mkdir(output_path)
 
-print(output_path)
-
 xStarNames = ["astar","bstar","cstar"]
-
+colors = ["b","r","g"]
 
 # Creating the theta and phi values.
 
-intervals = 50
+intervals = 100
 ntheta = intervals
 nphi = 2*intervals
 print(np.pi/ntheta)
@@ -48,39 +45,25 @@ X = np.outer(np.sin(theta), np.cos(phi))
 Y = np.outer(np.sin(theta), np.sin(phi))
 Z = np.outer(np.cos(theta), np.ones(nphi+1))
 
-# Creating a 2D array to be color-mapped on the unit sphere. Counting of reciprocal vector direction occurences.
+# Creating a 2D array to be color-mapped on the unit sphere.
 # {X, Y, Z}.shape → (ntheta+1, nphi+1) but c.shape → (ntheta, nphi)
 c = np.zeros((ntheta, nphi))
 
 for i in np.arange(3):
     p = re.compile(xStarNames[i] + " = ([\+\-\d\.]* [\+\-\d\.]* [\+\-\d\.]*)")
     xStarStrings = p.findall(stream)
+
     xStars = np.zeros((3, 3*len(xStarStrings)), float)
 
     for j in np.arange(len(xStarStrings)):
         xStars[:,i*len(xStarStrings) +j] = np.array([float(s) for s in xStarStrings[j].split(' ')])
-        norm_value = math.sqrt(xStars[0,i*len(xStarStrings)+j]**2 + xStars[1,i*len(xStarStrings)+j]**2 + xStars[2,i*len(xStarStrings)+j]**2)
-        
-        theta_meas = np.arccos(xStars[2,i*len(xStarStrings)+j]/norm_value)
-        phi_meas = np.pi + np.arctan2(xStars[1,i*len(xStarStrings)+j],xStars[0,i*len(xStarStrings)+j])
-        index_theta = closest_index(theta, theta_meas)
-        index_phi = closest_index(phi, phi_meas)
-        c[index_theta-1, index_phi-1]+=1
 
-c=np.log(c)
-c/=np.max(c)
-fig = plt.figure(figsize=(10,10))
-ax = fig.add_subplot( 1, 1, 1, projection='3d')
-cm = mpl.cm.viridis
-sm = mpl.cm.ScalarMappable(cmap=cm)
-sm.set_array([])
-surf = ax.plot_surface(X, Y, Z, facecolors=cm(c), linewidth=0, alpha=0.8)
-plt.title("Reciprocal lattice vectors ocurrences")
-plt.xlabel("î")
-plt.ylabel("ĵ")
-fig.colorbar(surf)
-
-out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_all_heatmap.png")
-plt.savefig(out)
-plt.show()
-plt.close()
+    fig = plt.figure(figsize=(10,10))
+    ax = fig.add_subplot( 1, 1, 1, projection='3d')
+    ax.scatter(xStars[0,:],xStars[1,:],xStars[2,:], marker=".", color=colors[i], s=1)
+    plt.title(xStarNames[i] + "s")
+    out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_color_" + xStarNames[i])+'.png'
+    plt.savefig(out)
+    plt.show()
+    c = np.zeros((ntheta, nphi))
+    plt.close()
