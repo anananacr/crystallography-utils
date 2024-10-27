@@ -29,6 +29,9 @@ count_hits=0
 count_centered=0
 count_refined=0
 
+output = open(sys.argv[2], "w")
+file_name=""
+
 def apply_shift_to_peak(fs: int, ss: int, detector_shift_x_in_px: int, detector_shift_y_in_px: int, panel_number: int):
     if panel_number<4:
         shifted_ss = ss - detector_shift_y_in_px
@@ -53,19 +56,18 @@ for count, line in enumerate(stream):
             if is_centered:
                 count_centered+=1    
             if is_refined:
-                count_refined+=1           
+                count_refined+=1
+
+            if is_a_hit and is_centered:
+            #if is_a_hit and is_centered and is_refined:
+                output.write(file_name)
+                filename=""          
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
             reading_peaks = True
-        elif reading_peaks and is_a_hit and is_centered:
-        #elif reading_peaks and is_a_hit and is_centered and is_refined:
-            fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
-            panel_number = int(line.split()[4].split("p")[-1].split("a")[0])-1
-            shifted_fs, shifted_ss = apply_shift_to_peak(int(np.round(fs)), int(np.round(ss)), detector_shift_x_in_px, detector_shift_y_in_px, panel_number)
-            powder[0,panel_number, shifted_ss, shifted_fs] += 1e0*intensity
-        elif line.split(': ')[0]=='Image filename':
-            file_name=line.split(': ')[-1][:-1]
-        elif line.split(': ')[0]=='Event':
-            event=int(line.split(': //')[-1])
+        elif line.split(': ')[0]=="Image filename":
+            file_name = line.split(': ')[1][:-1]+" "
+        elif line.split(' ')[0]=="Event:":
+            file_name += line.split(' ')[1]
         elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_y_in_mm":
             detector_shift_y_in_mm = float(line.split(' = ')[-1])
             detector_shift_y_in_px = int(np.round(detector_shift_y_in_mm * PixelResolution))
@@ -82,7 +84,6 @@ for count, line in enumerate(stream):
             memory_cell_number = int(line.split(' = ')[-1])
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
-        powder = np.zeros((1,8,(2*512)+1,(2*1024)+1), np.float32)
     elif reading_geometry:
         try:
             par, val = line.split('=')
@@ -101,8 +102,4 @@ for count, line in enumerate(stream):
 
 print(f"--- Finished reading stream --- \n Number of hits: {count_hits} \n Number of centered frames: {count_centered} \n Number of frames with refined center: {count_refined} ")
 
-powder/=1e2
-f = h5py.File(f"{splitext(basename(sys.argv[1]))[0]}-powder-shift-centered.h5", 'w')
-#f = h5py.File(f"{splitext(basename(sys.argv[1]))[0]}-powder-shift-refined.h5", 'w')
-f.create_dataset('/entry_1/instrument_1/detector_1/data', data=(powder[:,:,:max_ss+1,:max_fs+1]).astype(np.int32))
-f.close()
+output.close()

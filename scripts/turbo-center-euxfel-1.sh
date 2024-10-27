@@ -15,14 +15,14 @@ for i in $(seq $START 1 $END); do
         LIST_NAME=${INPUT}.lst${i}
     fi
     
-    LABEL=bb_p_new_${i}
-    JNAME="bb_p_new_${i}"
-    NAME="bb_p_new_${i}_${INPUT}"
+    LABEL=bb_l_v7_${i}
+    JNAME="bb_l_v7_${i}"
+    NAME="bb_l_v7_${i}_${INPUT}"
     SLURMFILE="${NAME}_${INPUT}.sh"
     echo "#!/bin/sh" > $SLURMFILE
     echo >> $SLURMFILE
-    echo "#SBATCH --partition=upex" >> $SLURMFILE  # Set your partition here
-    echo "#SBATCH --time=10-00:00:00" >> $SLURMFILE
+    echo "#SBATCH --partition=cfel-cdi" >> $SLURMFILE  # Set your partition here
+    echo "#SBATCH --time=4-00:00:00" >> $SLURMFILE
     echo "#SBATCH --nodes=1" >> $SLURMFILE
     echo >> $SLURMFILE
     echo "#SBATCH --chdir   $PWD" >> $SLURMFILE
@@ -30,7 +30,7 @@ for i in $(seq $START 1 $END); do
     echo "#SBATCH --requeue" >> $SLURMFILE
     echo "#SBATCH --output    /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/error/${NAME}-%N-%j.out" >> $SLURMFILE
     echo "#SBATCH --error     /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/error/${NAME}-%N-%j.err" >> $SLURMFILE
-    echo "#SBATCH --nice=50" >> $SLURMFILE
+    echo "#SBATCH --nice=0" >> $SLURMFILE
     echo "#SBATCH --mincpus=128" >> $SLURMFILE
     echo "#SBATCH --mem=100G" >> $SLURMFILE
     echo >> $SLURMFILE
@@ -39,7 +39,7 @@ for i in $(seq $START 1 $END); do
     echo "module purge" >> $SLURMFILE
     echo "source /gpfs/cfel/user/rodria/software/beambusters-env/bin/activate" >> $SLURMFILE
     echo >> $SLURMFILE
-    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_vitc.yaml"
+    command="beambusters run_centering ${ROOT}/lists/${LIST_NAME} ${ROOT}/config/config_lyso_1.yaml"
     echo $command >> $SLURMFILE
     echo "chmod a+rw $PWD" >> $SLURMFILE
     sbatch $SLURMFILE 

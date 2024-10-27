@@ -83,5 +83,5 @@ print(f"--- Finished reading stream --- \n Number of hits: {count_hits} \n Numbe
 
 powder/=1e2
 f = h5py.File(splitext(basename(sys.argv[1]))[0]+'-powder.h5', 'w')
-f.create_dataset('/data/data', data=(powder[:,:,:max_ss+1,:max_fs+1]).astype(np.int32))
+f.create_dataset('/entry_1/instrument_1/detector_1/data', data=(powder[:,:,:max_ss+1,:max_fs+1]).astype(np.int32))
 f.close()
