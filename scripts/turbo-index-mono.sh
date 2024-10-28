@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=5000  # Size of job chunks
+SPLIT=10000  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -66,7 +66,7 @@ for FILE in split-events-${RUN}.lst*; do
     echo "#!/bin/sh" > $SLURMFILE
     echo >> $SLURMFILE
 
-    echo "#SBATCH --partition=upex" >> $SLURMFILE  # Set your partition here
+    echo "#SBATCH --partition=cfel-cdi" >> $SLURMFILE  # Set your partition here
     echo "#SBATCH --time=0-10:00:00" >> $SLURMFILE
     echo "#SBATCH --nodes=1" >> $SLURMFILE
     # It may be polite to set the niceness very high (low priority) to allow other jobs through:
@@ -88,7 +88,7 @@ for FILE in split-events-${RUN}.lst*; do
     command="$command --peaks=peakfinder8 --threshold=100 --min-snr=5 --local-bg-radius=4 --min-pix-count=2 --max-pix-count=30 --min-res=100 --max-res=1700 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry_1/instrument_1/pre_centering_flag --copy-header=/entry_1/instrument_1/hit --copy-header=/entry_1/instrument_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
     #command="$command --peaks=peakfinder8 --threshold=100 --min-snr=6 --local-bg-radius=4 --min-pix-count=3 --max-pix-count=200 --min-res=100 --max-res=1700 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry_1/instrument_1/pre_centering_flag --copy-header=/entry_1/instrument_1/hit --copy-header=/entry_1/instrument_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
     command="$command --no-use-saturated"
-    command="$command --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=6"
+    #command="$command --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=6"
     #command="$command --indexing=none"
     #command="$command --indexing=mosflm-latt-nocell"
     command="$command --indexing=xgandalf-nolatt-cell"
