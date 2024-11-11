@@ -120,26 +120,22 @@ def main():
             bad_pixels_map[:,:, storage_cell_number, gain_mode] = bad_pixels_file[f"/{detector_id[detector_index]}/BadPixelsDark10Hz/0/data"][:,:, storage_cell_number, gain_mode]
         bad_pixels_file.close()
 
-        #data_shape = f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}::daqOutput/data/adc"].shape
-        #converted_data = np.zeros(data_shape, dtype=np.int32)
-        ## for test data
-        converted_data = np.zeros((512,1024, 10,16), dtype=np.int32)
-
         ## collect raw path for the detector in raw folder
         raw_files_path = sorted(glob.glob(os.path.join(args.input, f"RAW-*-{detector}-S*.h5")))
 
         for raw_file in raw_files_path:
-            print(raw_file)
             with h5py.File(f"{raw_file}", "r") as f:
-                print(f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"].shape)
                 data_shape=f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"].shape
                 if data_shape[0] != 0:
                     n_frames = f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"].shape[0]
                 else:
                     continue
                 
-                #for i in range(data_shape[0]):
-                for i in range(10):
+                #converted_data = np.zeros((512,1024, 10,16), dtype=np.int32)
+                converted_data = np.zeros((512,1024, n_frames,16), dtype=np.int32)
+                
+                for i in range(data_shape[0]):
+                #for i in range(10):
                     for j in range(16):
                         storage_cell=int(f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/memoryCell"][i,j])
                         bad_pixels_gain_1_mask = bad_pixels_map[:,:,storage_cell,1].copy()
@@ -147,13 +143,16 @@ def main():
                         bad_pixels_gain_1_mask[np.where(bad_pixels_gain_1_mask==0)]=1
                         raw_data=np.array(f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"][i,j])
                         converted_data[:,:,i,j] = apply_calibration(raw_data*bad_pixels_gain_1_mask, darks[:,:,storage_cell,:], gain[:,:,storage_cell,:])
+                        converted_data[np.isnan(converted_data)]=0
+
             file_label=raw_file.split("RAW")[-1]
-            with h5py.File(f"{output_folder}/CORR{file_label}", "w") as f:
-                entry = f.create_group("entry_1")
-                entry.attrs["NX_class"] = "NXentry"
-                grp_data = entry.create_group("data_1")
-                grp_data.attrs["NX_class"] = "NXdata"
-                grp_data.create_dataset("data", data=converted_data, compression="gzip", compression_opts=6)
+            
+            command = f"cp {raw_file} {output_folder}/CORR{file_label}"
+            sub.call(command, shell=True)
+
+            with h5py.File(f"{output_folder}/CORR{file_label}", "a") as f:
+                del f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"]
+                f.create_dataset(f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc", data=converted_data, compression="gzip", compression_opts=6)
 
 if __name__ == "__main__":
     main()
