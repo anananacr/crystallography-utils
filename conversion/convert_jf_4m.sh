@@ -1,11 +1,11 @@
 #!/bin/sh
 #SBATCH --partition=upex
-#SBATCH --time=10-00:00:00
+#SBATCH --time=1-00:00:00
 #SBATCH --requeue
 #SBATCH --nodes=1
-#SBATCH --mincpus=12
-#SBATCH --mem=20G
-#SBATCH --nice=100
+#SBATCH --mincpus=16
+#SBATCH --mem=50G
+#SBATCH --nice=50
 
 #SBATCH --job-name calib
 #SBATCH --output /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/error/convert-%N-%j.out
@@ -26,7 +26,8 @@ INDEX=$2
 DARKS=darks.lst
 GAIN=gain_maps.lst
 BAD_PIXELS=bad_pixels.lst
+BAD_PIXELS_FF=bad_pixels_ff.lst
 ROOT=/gpfs/exfel/exp/SPB/202425/p008396
 echo $INP
 
-python jf_4m_calib_fixg1_par.py -p ${ROOT}/scratch/rodria/calib/${DARKS} -g  ${ROOT}/scratch/rodria/calib/${GAIN} -b ${ROOT}/scratch/rodria/calib/${BAD_PIXELS} -i ${ROOT}/raw/${INP} -o ${ROOT}/scratch/rodria/converted/${INP} -n ${INDEX};
+python jf_4m_calib_fixg1_par.py -p ${ROOT}/scratch/rodria/calib/${DARKS} -g  ${ROOT}/scratch/rodria/calib/${GAIN} -b ${ROOT}/scratch/rodria/calib/${BAD_PIXELS} -bf ${ROOT}/scratch/rodria/calib/${BAD_PIXELS_FF} -i ${ROOT}/raw/${INP} -o ${ROOT}/scratch/rodria/converted/${INP} -n ${INDEX};
