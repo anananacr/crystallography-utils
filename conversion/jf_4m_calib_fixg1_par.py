@@ -67,6 +67,13 @@ def apply_calibration(data: np.ndarray, dark=None, gain=None, mask=None) -> np.n
     d -= dark
     d /= gain
     d = np.nan_to_num(d, nan=0)
+
+    ## revert the mask again
+    bad_pixels_index=np.where(mask==0)
+    good_pixels_index=np.where(mask==1)
+    mask[good_pixels_index]=0
+    mask[bad_pixels_index]=1
+
     return (d).astype(np.int32), mask.astype(np.int32)
 
 def process_raw_file(process_args: list):
@@ -74,21 +81,20 @@ def process_raw_file(process_args: list):
 
     # prepare constants
     mask = np.moveaxis(bad_pixels_map, 2, 0)
-    #bad_pixels_index=np.where(mask>0)
-    #good_pixels_index=np.where(mask==0)
-    #mask[good_pixels_index]=1
-    #mask[bad_pixels_index]=0
+    bad_pixels_index=np.where(mask>0)
+    good_pixels_index=np.where(mask==0)
+    mask[good_pixels_index]=1
+    mask[bad_pixels_index]=0
 
     # format should be cell, x, y, gain
-    mask_ff = np.moveaxis(bad_pixels_ff_map, [0, 1], [2, 0])
-
-    #bad_pixels_ff_index=np.where(mask_ff>0)
-    #good_pixels_ff_index=np.where(mask_ff==0)
-    #mask_ff[good_pixels_ff_index]=1
-    #mask_ff[bad_pixels_ff_index]=0
-       
-    #mask[..., [255, 256], :, :] = 0
-    #mask[..., [255, 256, 511, 512, 767, 768], :] = 0
+    mask_ff = np.moveaxis(bad_pixels_ff_map, [0, 1, 2, 3], [2, 1, 0, 3])
+    bad_pixels_ff_index=np.where(mask_ff>0)
+    good_pixels_ff_index=np.where(mask_ff==0)
+    mask_ff[good_pixels_ff_index]=1
+    mask_ff[bad_pixels_ff_index]=0
+    
+    mask[..., [255, 256], :, :] = 0
+    mask[..., [255, 256, 511, 512, 767, 768], :] = 0
 
     #mask = np.nan_to_num(mask, nan=0)
     darks = np.moveaxis(darks, [0, 1], [1, 2])
@@ -96,6 +102,7 @@ def process_raw_file(process_args: list):
     gain = np.moveaxis(gain, [0, 2], [2, 0])
     
     print(darks.shape, gain.shape, mask.shape, mask_ff.shape)
+    mask *= mask_ff
 
     with h5py.File(f"{raw_file}", "r") as f:
         data_shape=f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"].shape
@@ -104,7 +111,7 @@ def process_raw_file(process_args: list):
         else:
             return 0
         
-        n_frames=10
+        #n_frames=10
         converted_data = np.zeros((n_frames, 512, 1024, 16), dtype=np.int32)
         mask_dataset = np.zeros((n_frames, 512, 1024, 16), dtype=np.int32)
         raw_data = np.zeros((512, 1024), dtype=np.int32)
@@ -115,9 +122,12 @@ def process_raw_file(process_args: list):
                 raw_data=np.array(f[f"/INSTRUMENT/SPB_IRDA_JF4M/DET/{detector}:daqOutput/data/adc"][i,j], dtype=np.int32)
                 # format should be cell, x, y, gain
                 converted_data[i,:,:,j], mask_dataset[i,:,:,j] = apply_calibration(raw_data, darks[storage_cell,:,:,1], gain[storage_cell,:,:,1], mask[storage_cell,:,:,1])
-                #converted_data[i,:,:,j] *= mask_dataset[i,:,:,j]
+                converted_data[i,:,:,j] *= mask[storage_cell,:,:,1]
                 print(raw_data.shape, converted_data.shape, mask_dataset.shape, darks.shape, gain.shape)
     
+    converted_data = np.moveaxis(converted_data, 3,1)
+    mask_dataset = np.moveaxis(mask_dataset, 3,1)
+
     file_label=raw_file.split("RAW")[-1]
     
     output_folder = args.output
