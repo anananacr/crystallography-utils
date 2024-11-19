@@ -16,37 +16,6 @@ import os
 from multiprocessing import Pool
 import matplotlib.colors as color
 import pathlib
-from enum import Enum, IntEnum, IntFlag
-
-
-class BadPixels(IntFlag):
-    """ The European XFEL Bad Pixel Encoding
-    """
-
-    OFFSET_OUT_OF_THRESHOLD  = 1 << 0 # bit 1
-    NOISE_OUT_OF_THRESHOLD   = 1 << 1 # bit 2
-    OFFSET_NOISE_EVAL_ERROR  = 1 << 2 # bit 3
-    NO_DARK_DATA             = 1 << 3 # bit 4
-    CI_GAIN_OF_OF_THRESHOLD  = 1 << 4 # bit 5
-    CI_LINEAR_DEVIATION      = 1 << 5 # bit 6
-    CI_EVAL_ERROR            = 1 << 6 # bit 7
-    FF_GAIN_EVAL_ERROR       = 1 << 7 # bit 8
-    FF_GAIN_DEVIATION        = 1 << 8 # bit 9
-    FF_NO_ENTRIES            = 1 << 9 # bit 10
-    CI2_EVAL_ERROR           = 1 << 10 # bit 11
-    VALUE_IS_NAN             = 1 << 11 # bit 12
-    VALUE_OUT_OF_RANGE       = 1 << 12 # bit 13
-    GAIN_THRESHOLDING_ERROR  = 1 << 13 # bit 14
-    DATA_STD_IS_ZERO         = 1 << 14 # bit 15
-    ASIC_STD_BELOW_NOISE     = 1 << 15 # bit 16
-    INTERPOLATED             = 1 << 16 # bit 17
-    NOISY_ADC                = 1 << 17 # bit 18
-    OVERSCAN                 = 1 << 18 # bit 19
-    NON_SENSITIVE            = 1 << 19 # bit 20
-    NON_LIN_RESPONSE_REGION  = 1 << 20 # bit 21
-    WRONG_GAIN_VALUE         = 1 << 21 # bit 22
-    NON_STANDARD_SIZE        = 1 << 22 # bit 23
-
 
 def apply_calibration(data: np.ndarray, dark=None, gain=None, mask=None) -> np.ndarray:
     """
