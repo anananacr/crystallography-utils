@@ -7,7 +7,7 @@
 #                       a research centre of the Helmholtz Association.
 #
 # Author:
-#    2017 Alexandra Tolstikova <alexandra.tolstikova@desy.de>
+#    2024 Ana Carolina Rodrigues <ana.rodrigues@desy.de>s
 #
 
 import sys

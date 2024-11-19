@@ -12,14 +12,13 @@
 
 
 # Convert images using convert_all.py script. Remember to set correctly paths where data and pedestals from JUNGFRAU 1M are stored.
-# Enable H5 data to be converted in step-wise manner, using start and end frame number arguments,  dividing it in smaller jobs.
 
 # Written by Ana Carolina Rodrigues.
 #
 # Mail: ana.rodrigues@desy.de
 
 source /etc/profile.d/modules.sh
-source /home/rodria/scripts/regae/env-regae/bin/activate
+source /gpfs/cfel/user/rodria/software/crystallography-utils-env/bin/activate
 
 INP=$1
 DARKS_D0=$2

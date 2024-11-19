@@ -69,7 +69,7 @@ def apply_calibration(data: np.ndarray, dark=dark, gain=gain) -> np.ndarray:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Convert JUNGFRAU 1M H5 images collected at REGAE for rotational data step/fly scan and return images in rotation sequence according tro the file index."
+        description="Convert JUNGFRAU 1M H5 images collected in burst mode fix gain 1."
     )
     parser.add_argument(
         "-i", "--input", type=str, action="store", help="hdf5 input image"

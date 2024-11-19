@@ -15,12 +15,6 @@ import numpy as np
 import h5py
 from os.path import basename, splitext
 
-if sys.argv[1] == '-':
-    stream = sys.stdin
-else:
-    stream = open(sys.argv[1], 'r')
-
-
 PixelResolution = 1 / (75 * 1e-3)
 
 reading_geometry = False
@@ -35,11 +29,10 @@ count_hits=0
 count_centered=0
 count_refined=0
 
-
-def apply_shift_to_peak(fs: int, ss: int, detector_shift_x_in_px: int, detector_shift_y_in_px: int):
-    shifted_fs = fs + detector_shift_y_in_px
-    shifted_ss = ss - detector_shift_x_in_px
-    return shifted_fs, shifted_ss
+if sys.argv[1] == '-':
+    stream = sys.stdin
+else:
+    stream = open(sys.argv[1], 'r')
 
 for count, line in enumerate(stream):
     if reading_chunks:
@@ -50,36 +43,28 @@ for count, line in enumerate(stream):
             if is_centered:
                 count_centered+=1    
             if is_refined:
-                count_refined+=1                      
+                count_refined+=1            
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
             reading_peaks = True
         elif reading_peaks and is_a_hit and is_centered:
-        #elif reading_peaks and is_a_hit and is_centered and is_refined:
             fs, ss, dump, intensity = [float(i) for i in line.split()[:4]]
             panel_number = int(line.split()[4].split("p")[-1].split("a")[0])-1
-            shifted_fs, shifted_ss = apply_shift_to_peak(int(np.round(fs)), int(np.round(ss)), detector_shift_x_in_px, detector_shift_y_in_px)
-            powder[int(np.round(shifted_ss)), int(np.round(shifted_fs))] += 1e0*intensity
+            powder[0, panel_number, int(np.round(ss)), int(np.round(fs))] += 1e0*intensity
         elif line.split(': ')[0]=='Image filename':
             file_name=line.split(': ')[-1][:-1]
         elif line.split(': ')[0]=='Event':
             event=int(line.split(': //')[-1])
-        elif line.split(' = ')[0]=="header/float//entry/data/detector_shift_y_in_mm":
-            detector_shift_y_in_mm = float(line.split(' = ')[-1])
-            detector_shift_y_in_px = detector_shift_y_in_mm * PixelResolution
-        elif line.split(' = ')[0]=="header/float//entry/data/detector_shift_x_in_mm":
-            detector_shift_x_in_mm = float(line.split(' = ')[-1])
-            detector_shift_x_in_px = detector_shift_x_in_mm * PixelResolution
-        elif line.split(' = ')[0]=="hit":
-            is_a_hit = int(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/int//entry/data/pre_centering_flag":
+        elif line.startswith("hit = 1"):
+            is_a_hit = True
+        elif line.startswith("hit = 0"):
+            is_a_hit = False
+        elif line.split(' = ')[0]=="header/int//entry_1/instrument_1/data_1/pre_centering_flag":
             is_centered = int(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/int//entry/data/refined_center_flag":
+        elif line.split(' = ')[0]=="header/int//entry_1/instrument_1/data_1/refined_center_flag":
             is_refined = int(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/int//entry/data/storage_cell_number":
-            memory_cell_number = int(line.split(' = ')[-1])
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
-        powder = np.zeros((2*max_ss + 1, 2*max_fs + 1))
+        powder = np.zeros((1,8,max_ss+1,max_fs+1), np.float32)
     elif reading_geometry:
         try:
             par, val = line.split('=')
@@ -96,8 +81,7 @@ for count, line in enumerate(stream):
 
 print(f"--- Finished reading stream --- \n Number of hits: {count_hits} \n Number of centered frames: {count_centered} \n Number of frames with refined center: {count_refined} ")
 
-powder/=1e0
-f = h5py.File(f"{splitext(basename(sys.argv[1]))[0]}-powder-shift-centered.h5", 'w')
-#f = h5py.File(f"{splitext(basename(sys.argv[1]))[0]}-powder-shift-refined.h5", 'w')
-f.create_dataset('/entry/data/data', data=(powder[:max_ss+1,:max_fs+1]).astype(np.int32))
+powder/=1e2
+f = h5py.File(splitext(basename(sys.argv[1]))[0]+'-powder.h5', 'w')
+f.create_dataset('/entry_1/data_1/data', data=(powder[:,:,:max_ss+1,:max_fs+1]).astype(np.int32))
 f.close()

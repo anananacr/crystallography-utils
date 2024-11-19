@@ -26,10 +26,7 @@ f.close()
 
 output_path = os.path.dirname(os.path.abspath(streamFileName))  + '/plots_res'
 if not os.path.exists(output_path):
-    print(20)
     os.mkdir(output_path)
-
-print(output_path)
 
 xStarNames = ["astar","bstar","cstar"]
 
@@ -55,8 +52,7 @@ c = np.zeros((ntheta, nphi))
 for i in np.arange(3):
     p = re.compile(xStarNames[i] + " = ([\+\-\d\.]* [\+\-\d\.]* [\+\-\d\.]*)")
     xStarStrings = p.findall(stream)
-    if i==0:
-        xStars = np.zeros((3, 3*len(xStarStrings)), float)
+    xStars = np.zeros((3, 3*len(xStarStrings)), float)
 
     for j in np.arange(len(xStarStrings)):
         xStars[:,i*len(xStarStrings) +j] = np.array([float(s) for s in xStarStrings[j].split(' ')])
@@ -65,10 +61,8 @@ for i in np.arange(3):
         theta_meas = np.arccos(xStars[2,i*len(xStarStrings)+j]/norm_value)
         phi_meas = np.pi + np.arctan2(xStars[1,i*len(xStarStrings)+j],xStars[0,i*len(xStarStrings)+j])
 
-        print(theta_meas,phi_meas)
         index_theta = closest_index(theta, theta_meas)
         index_phi = closest_index(phi, phi_meas)
-        print(index_theta, index_phi)
         c[index_theta-1, index_phi-1]+=1
         
 
@@ -79,13 +73,13 @@ for i in np.arange(3):
     cm = mpl.cm.viridis
     sm = mpl.cm.ScalarMappable(cmap=cm)
     sm.set_array([])
-    ax = ax.plot_surface(X, Y, Z, facecolors=cm(c), rstride=1, cstride=1, alpha=0.8)
+    surf = ax.plot_surface(X, Y, Z, facecolors=cm(c), linewidth=0, alpha=0.8)
     plt.title(xStarNames[i] + "s")
     plt.xlabel("î")
     plt.ylabel("ĵ")
-    plt.colorbar(ax)
+    fig.colorbar(surf)
+    out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_heat_map" + xStarNames[i])+'.png'
+    plt.savefig(out)
     plt.show()
     c = np.zeros((ntheta, nphi))
     plt.close()
-    out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_" + xStarNames[i])+'.png'
-

@@ -55,8 +55,7 @@ c = np.zeros((ntheta, nphi))
 for i in np.arange(3):
     p = re.compile(xStarNames[i] + " = ([\+\-\d\.]* [\+\-\d\.]* [\+\-\d\.]*)")
     xStarStrings = p.findall(stream)
-    if i==0:
-        xStars = np.zeros((3, 3*len(xStarStrings)), float)
+    xStars = np.zeros((3, 3*len(xStarStrings)), float)
 
     for j in np.arange(len(xStarStrings)):
         xStars[:,i*len(xStarStrings) +j] = np.array([float(s) for s in xStarStrings[j].split(' ')])
@@ -75,13 +74,13 @@ ax = fig.add_subplot( 1, 1, 1, projection='3d')
 cm = mpl.cm.viridis
 sm = mpl.cm.ScalarMappable(cmap=cm)
 sm.set_array([])
-ax = ax.plot_surface(X, Y, Z, facecolors=cm(c), rstride=1, cstride=1, alpha=0.8)
+surf = ax.plot_surface(X, Y, Z, facecolors=cm(c), linewidth=0, alpha=0.8)
 plt.title("Reciprocal lattice vectors ocurrences")
 plt.xlabel("î")
 plt.ylabel("ĵ")
-plt.colorbar(ax)
-plt.show()
+fig.colorbar(surf)
 
-out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_all.png")
+out = os.path.join(output_path, os.path.basename(streamFileName).split('.')[0]+ "_all_heatmap.png")
+plt.savefig(out)
 plt.show()
 plt.close()

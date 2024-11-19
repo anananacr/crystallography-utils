@@ -30,9 +30,9 @@ def process_chunk(chunk, q, detector):
 
         elif line.startswith("End of peak list"):
             reading_peaks = False
-        elif line.split(" = ")[0]=="header/float//entry/shots/detector_shift_x_in_mm":
+        elif line.split(" = ")[0]=="header/float//entry_1/instrument_1/detector_shift_x_in_mm":
              shift_x = float(line.split(" = ")[-1])*1e-3
-        elif line.split(" = ")[0]=="header/float//entry/shots/detector_shift_y_in_mm":
+        elif line.split(" = ")[0]=="header/float//entry_1/instrument_1/detector_shift_y_in_mm":
              shift_y = float(line.split(" = ")[-1])*1e-3
         elif reading_peaks:
             s = line.split()
@@ -118,8 +118,6 @@ def parse_args():
     )
     parser.add_argument("stream", type=str, help="stream file")
     parser.add_argument("geometry", type=str, help="geometry file")
-    parser.add_argument("spectrum", type=str, help="spectrum file")
-
     parser.add_argument(
         "-n",
         "--nproc",
@@ -139,7 +137,7 @@ if __name__ == "__main__":
 
     stream = args.stream
     geometry_file = args.geometry
-    spectrum = args.spectrum
+    
     nproc = args.nproc
     label=os.path.basename(stream)
     manager = Manager()
@@ -186,27 +184,24 @@ if __name__ == "__main__":
 
     np.savetxt(f"k_{label[:-7]}.dat", list(zip(k_peak, r_peak)))
 
-    sk, si = np.loadtxt(spectrum, skiprows=1, unpack=True)
-    sk *= 1e3
-    si /=np.max(si)
     d_peak = 1e10 / np.array(r_peak)
     k_peak = np.array(k_peak)
 
     ax2 = plt.gca()
     ax1 = ax2.twinx()
 
-    ax1.plot(sk, si, label="Spectrum", color="C0")
     ax1.set_xlabel("k, eV")
     ax1.set_ylabel("Normalized intensity", color="C0")
     for tl in ax1.get_yticklabels():
         tl.set_color("C0")
 
-    ax1.set_ylim(0, 1.05)
-
-    fitfunc = lambda x, p0, p1: p0 * np.interp(p1 * np.asarray(x), sk, si, right=0)
+    #ax1.set_ylim(0, 1.05)
+    k_peak = k_peak[np.where(d_peak < 30)]
+    k_peak = k_peak[np.where(k_peak < 9.2e3)]
+    k_peak = k_peak[np.where(k_peak > 9.0e3)]
 
     y, bins, patches = ax2.hist(
-        k_peak[np.where(d_peak < 30)], 100, alpha=0.6, color="C2", label="Found peaks"
+        k_peak, 100, alpha=0.6, color="C2", label="Found peaks"
     )
 
     ax2.set_ylabel("N peaks", color="C2")
@@ -214,16 +209,7 @@ if __name__ == "__main__":
         tl.set_color("C2")
 
     x = [(bins[i] + bins[i + 1]) / 2.0 for i in range(y.shape[0])]
-
-    p = curve_fit(fitfunc, x, y, p0=((y.max() / 1.0, 1)))
-    sf = 1 / p[0][1]
-
-    ax1.plot(sk * sf, si, "C0:", label="Fitted spectrum, \n scale factor = %.4f" % sf)
-
-    lines, labels = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax2.legend(lines + lines2, labels + labels2, loc=0, prop={"size": 10})
-
+    ax2.set_xlim(9000,9200)
     ax2.set_xlabel("k, eV")
     plt.tight_layout()
     plt.savefig(f"{label[:-7]}.png")
