@@ -68,17 +68,17 @@ for count, line in enumerate(stream):
             file_name = line.split(': ')[1][:-1]+" "
         elif line.split(' ')[0]=="Event:":
             file_name += line.split(' ')[1]
-        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_y_in_mm":
+        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/data_1/detector_shift_y_in_mm":
             detector_shift_y_in_mm = float(line.split(' = ')[-1])
             detector_shift_y_in_px = int(np.round(detector_shift_y_in_mm * PixelResolution))
-        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_x_in_mm":
+        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/data_1/detector_shift_x_in_mm":
             detector_shift_x_in_mm = float(line.split(' = ')[-1])
             detector_shift_x_in_px = int(np.round(detector_shift_x_in_mm * PixelResolution))
         elif line.split(' = ')[0]=="hit":
             is_a_hit = int(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/int//entry_1/instrument_1/pre_centering_flag":
+        elif line.split(' = ')[0]=="header/int//entry_1/instrument_1/data_1/pre_centering_flag":
             is_centered = int(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/int//entry_1/instrument_1/refined_center_flag":
+        elif line.split(' = ')[0]=="header/int//entry_1/instrument_1/data_1/refined_center_flag":
             is_refined = int(line.split(' = ')[-1])
         elif line.split(' = ')[0]=="header/int//entry_1/memoryCell":
             memory_cell_number = int(line.split(' = ')[-1])

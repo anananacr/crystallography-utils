@@ -11,7 +11,7 @@
 #   2016      Steve Aplin <steve.aplin@desy.de>
 #   2016-2017 Thomas White <taw@physics.org>
 
-SPLIT=2000  # Size of job chunks
+SPLIT=1000  # Size of job chunks
 #MAIL=you@example.org  # Email address for SLURM notifications
 
 INPUT=$1
@@ -85,10 +85,10 @@ for FILE in split-events-${RUN}.lst*; do
 
     command="indexamajig -i $FILE -o $STREAMDIR/$STREAM --serial-start=$POS"
     command="$command -j 64 -g $GEOM"
-    command="$command --peaks=peakfinder8 --threshold=100 --min-snr=5 --local-bg-radius=4 --min-pix-count=2 --max-pix-count=30 --min-res=100 --max-res=1700 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry_1/instrument_1/pre_centering_flag --copy-header=/entry_1/instrument_1/hit --copy-header=/entry_1/instrument_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
+    command="$command --peaks=peakfinder8 --threshold=50 --min-snr=5 --local-bg-radius=3 --min-pix-count=2 --max-pix-count=30 --min-res=100 --max-res=1700 --min-peaks=10 --int-radius=4,5,6 --copy-header=/entry_1/instrument_1/data_1/pre_centering_flag --copy-header=/entry_1/instrument_1/data_1/hit --copy-header=/entry_1/instrument_1/data_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
     #command="$command --peaks=peakfinder8 --threshold=50 --min-snr=5 --local-bg-radius=3 --min-pix-count=2 --max-pix-count=30 --min-res=100 --max-res=1700 --min-peaks=10 --int-radius=3,4,5 --copy-header=/entry_1/instrument_1/pre_centering_flag --copy-header=/entry_1/instrument_1/hit --copy-header=/entry_1/instrument_1/refined_center_flag  --copy-header=/entry_1/memoryCell --copy-header=/entry_1/trainId --no-non-hits-in-stream"
     #command="$command --no-use-saturated"
-    #command="$command --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=6"
+    command="$command --xgandalf-grad-desc-iterations=5 "
     #command="$command --indexing=none"
     #command="$command --indexing=mosflm-latt-nocell"
     command="$command --indexing=xgandalf-nolatt-cell"
@@ -97,9 +97,9 @@ for FILE in split-events-${RUN}.lst*; do
     #command="$command  --xgandalf-grad-desc-iterations=5 --xgandalf-sampling-pitch=7 --xgandalf-max-lattice-vector-length=90.89 --xgandalf-min-lattice-vector-length=45.26 --xgandalf-tolerance=0.01 --multi"
     #command="$command  --xgandalf-grad-desc-iterations=4 --xgandalf-sampling-pitch=6 --xgandalf-min-lattice-vector-length=45.26 --xgandalf-max-lattice-vector-length=91.62 --xgandalf-tolerance=0.01 --multi"
     #command="$command --mille --mille-dir=$MILLE_DIR"
-    #command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/fakp.cell"
+    command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/fakp_mosflm.cell"
     #command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/fakp_latt.cell"
-    command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/lyso.cell"
+    #command="$command -p /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/cell/lyso.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_sweep_2.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/lyso.cell"
     #command="$command -p /asap3/petra3/gpfs/p09/2023/data/11019088/processed/rodria/cell/fakp_latt.cell"

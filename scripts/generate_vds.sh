@@ -38,7 +38,7 @@ for i in $(seq $START 1 $END); do
     echo "module purge" >> $SLURMFILE
     echo "module load exfel exfel-python" >> $SLURMFILE
     echo >> $SLURMFILE
-    command="extra-data-make-virtual-cxi /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/converted/${RUN_NAME} -o /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/centered_fosakp/${RUN_NAME}.cxi"
+    command="extra-data-make-virtual-cxi /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/converted/${RUN_NAME} -o /gpfs/exfel/exp/SPB/202425/p008396/scratch/rodria/centered_fosakp_0/${RUN_NAME}.cxi"
     echo $command >> $SLURMFILE
     echo "chmod a+rw $PWD" >> $SLURMFILE
     sbatch $SLURMFILE 
