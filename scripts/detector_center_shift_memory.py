@@ -27,15 +27,16 @@ reading_peaks = False
 max_fs = -100500
 max_ss = -100500
 is_centered = False
+is_refined = False
 is_indexed = False
-
+memory_cell_selected = int(sys.argv[2])
 
 for count, line in enumerate(stream):
     if reading_chunks:
         if line.startswith('End of peak list'):
             reading_peaks = False
-            #if is_centered:
-            if is_indexed:
+            if is_centered and is_indexed and memory_cell_number==memory_cell_selected:
+            #if is_indexed:
                 x_shift.append(shift_horizontal_mm)
                 y_shift.append(shift_vertical_mm)                 
         elif line.startswith('  fs/px   ss/px (1/d)/nm^-1   Intensity  Panel'):
@@ -49,14 +50,20 @@ for count, line in enumerate(stream):
                 is_indexed = False
             else:
                 is_indexed = True
-        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_y_in_mm":
+        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/data_1/detector_shift_y_in_mm":
             shift_vertical_mm = float(line.split(' = ')[-1])
-        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/detector_shift_x_in_mm":
+        elif line.split(' = ')[0]=="header/float//entry_1/instrument_1/data_1/detector_shift_x_in_mm":
             shift_horizontal_mm = float(line.split(' = ')[-1])
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 0"):
+        elif line.startswith("header/int//entry_1/instrument_1/data_1/refined_center_flag = 0"):
+            is_refined = False
+        elif line.startswith("header/int//entry_1/instrument_1/data_1/refined_center_flag = 1"):
+            is_refined = True
+        elif line.startswith("header/int//entry_1/instrument_1/data_1/pre_centering_flag = 0"):
             is_centered = False
-        elif line.startswith("header/int//entry/shots/refined_center_flag = 1"):
+        elif line.startswith("header/int//entry_1/instrument_1/data_1/pre_centering_flag = 1"):
             is_centered = True
+        elif line.startswith("header/int//entry_1/memoryCell"):
+            memory_cell_number = int(line.split(' = ')[-1])
     elif line.startswith('----- End geometry file -----'):
         reading_geometry = False
         x_shift = []
@@ -86,19 +93,16 @@ ax = fig.add_subplot(111, title="Detector center shift (mm)")
 ax.set_xlabel("Detector center shift in x (mm)")
 ax.set_ylabel("Detector center shift in y (mm)")
 
-ax.set_xlim(-5,5)
-ax.set_ylim(1,-9)
+ax.set_xlim(-4,4)
+ax.set_ylim(4,-12)
 
-H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(100,100))
+H, xedges, yedges = np.histogram2d(x_shift, y_shift, bins=(20,100))
 H = H.T
 Hmasked = np.ma.masked_where(H==0,H)
 
 X, Y = np.meshgrid(xedges, yedges)
-pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm", vmax=100)
+pos = ax.pcolormesh(X, Y, Hmasked, cmap="coolwarm")
 fig.colorbar(pos)
+fig.text(0.3,0.85,s=f"Memory cell number {memory_cell_selected}", fontsize=14, color="g")
 plt.grid()
-plt.savefig("lyso_sweep.png")
-f=open("lyso_sweep.txt", "w")
-for idx,i in enumerate(x_shift):
-    f.write(f"{i},{y_shift[idx]}\n")
-f.close()
+plt.savefig(f"fakp_sweep_centered_{memory_cell_selected}.png")
